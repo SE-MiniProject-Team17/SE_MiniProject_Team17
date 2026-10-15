@@ -35,6 +35,10 @@ const questionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// #14 – indexes for filtering and newest-first listing (NFR-PERF-05: results within 2 s for 1,000 questions).
+questionSchema.index({ topic: 1, difficulty: 1 });
+questionSchema.index({ createdAt: -1 });
+
 const Question = mongoose.model('Question', questionSchema);
 
 module.exports = { Question, LIMITS, OPTION_LABELS, DIFFICULTIES };
