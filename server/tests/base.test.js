@@ -1,7 +1,8 @@
 /**
  * Tests for the shared base: health check, error format, authentication and
- * role middleware. These need no database.
+ * role middleware. Authentication tests use an in-memory MongoDB session store.
  */
+const { startDB, clearDB, stopDB } = require('./helpers/db');
 const express = require('express');
 const request = require('supertest');
 const app = require('../src/app');
@@ -40,6 +41,15 @@ describe('API base', () => {
 });
 
 describe('authenticate + requireRole middleware', () => {
+  beforeAll(async () => {
+    await startDB();
+  });
+  afterEach(async () => {
+    await clearDB();
+  });
+  afterAll(async () => {
+    await stopDB();
+  });
   const testApp = express();
   testApp.get('/faculty-only', authenticate, requireRole(ROLES.FACULTY), (req, res) => res.json(req.user));
   testApp.use(errorHandler);
@@ -56,14 +66,14 @@ describe('authenticate + requireRole middleware', () => {
   });
 
   test('wrong role -> 403 ACCESS_DENIED', async () => {
-    const student = tokenFor(ROLES.STUDENT);
+    const student = await tokenFor(ROLES.STUDENT);
     const res = await request(testApp).get('/faculty-only').set('Authorization', `Bearer ${student.token}`);
     expect(res.status).toBe(403);
     expect(res.body.error).toEqual({ code: 'ACCESS_DENIED', message: 'Access denied' });
   });
 
   test('right role -> passes and req.user = { id, role }', async () => {
-    const faculty = tokenFor(ROLES.FACULTY);
+    const faculty = await tokenFor(ROLES.FACULTY);
     const res = await request(testApp).get('/faculty-only').set('Authorization', `Bearer ${faculty.token}`);
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ id: faculty.id, role: 'Faculty' });

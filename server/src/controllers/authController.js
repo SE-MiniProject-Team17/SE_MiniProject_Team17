@@ -1,4 +1,4 @@
-
+const Session = require('../models/Session');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const ROLES = require('../config/roles');
@@ -92,4 +92,21 @@ async function register(req, res, next) {
   }
 }
 
-module.exports = { register };
+async function logout(req, res, next) {
+  try {
+    await Session.updateOne(
+      {
+        _id: req.session.id,
+        user: req.user.id,
+        revokedAt: null,
+      },
+      { $set: { revokedAt: new Date() } }
+    );
+
+    return res.status(200).json({ message: 'Logout successful' });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { register, logout };
