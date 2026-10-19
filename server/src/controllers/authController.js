@@ -109,4 +109,98 @@ async function logout(req, res, next) {
   }
 }
 
-module.exports = { register, logout };
+
+async function login(req, res, next) {
+  try {
+    const { email, password } = req.body;
+
+    if (typeof email !== 'string' || !email.trim()) {
+      throw AppError.validation('email', 'Email is required');
+    }
+
+    if (typeof password !== 'string' || !password) {
+      throw AppError.validation('password', 'Password is required');
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Select the password hash explicitly because the User schema hides it.
+    const user = await User.findOne({ email: normalizedEmail }).select(
+      '+passwordHash'
+    );
+
+    // Use the same response for an unknown email and an incorrect password.
+    if (!user) {
+      throw new AppError(401, 'INVALID_CREDENTIALS', 'Invalid email or password');
+    }
+
+    const now = new Date();
+
+    // A locked account stays locked even if the password is correct.
+    if (user.lockedUntil && user.lockedUntil > now) {
+      throw new AppError(
+        423,
+        'ACCOUNT_LOCKED',
+        'Account temporarily locked. Try again in 15 minutes.'
+      );
+    }
+
+    // Clear an expired lock before checking credentials.
+    if (user.lockedUntil && user.lockedUntil <= now) {
+      user.failedLoginAttempts = 0;
+      user.lockedUntil = null;
+    }
+
+    const passwordMatches = await bcrypt.compare(
+      password,
+      user.passwordHash
+    );
+
+    if (!passwordMatches) {
+      user.failedLoginAttempts += 1;
+
+      if (user.failedLoginAttempts >= 5) {
+        user.lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+        await user.save();
+
+        throw new AppError(
+          423,
+          'ACCOUNT_LOCKED',
+          'Account temporarily locked. Try again in 15 minutes.'
+        );
+      }
+
+      await user.save();
+
+      throw new AppError(
+        401,
+        'INVALID_CREDENTIALS',
+        'Invalid email or password'
+      );
+    }
+
+    // A successful login resets consecutive failures.
+    user.failedLoginAttempts = 0;
+    user.lockedUntil = null;
+    await user.save();
+
+    // Use the existing server-side session service from Issue #48.
+    const { createSession } = require('../services/sessionService');
+    const { token } = await createSession(user);
+
+    return res.status(200).json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id.toString(),
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { register, login, logout };

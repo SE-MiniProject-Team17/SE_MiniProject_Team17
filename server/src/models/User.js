@@ -30,6 +30,15 @@ const userSchema = new mongoose.Schema(
       required: true,
       default: ROLES.STUDENT,
     },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    lockedUntil: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
