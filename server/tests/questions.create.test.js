@@ -10,8 +10,8 @@ const { startDB, clearDB, stopDB } = require('./helpers/db');
 const { tokenFor } = require('./helpers/auth');
 
 const URL = '/api/questions';
-const faculty = tokenFor('Faculty');
-const student = tokenFor('Student');
+let faculty;
+let student;
 
 const validQuestion = () => ({
   text: 'What is 2 + 2?',
@@ -26,6 +26,12 @@ const post = (body, user = faculty) =>
   request(app).post(URL).set('Authorization', `Bearer ${user.token}`).send(body);
 
 beforeAll(startDB);
+
+beforeEach(async () => {
+  faculty = await tokenFor('Faculty');
+  student = await tokenFor('Student');
+});
+
 afterEach(clearDB);
 afterAll(stopDB);
 
@@ -48,7 +54,7 @@ describe('TC-QB-01 – Faculty adds a valid question', () => {
   });
 
   test('REQ-QB-03: the owner is always the logged-in user, even if the client sends another owner', async () => {
-    const other = tokenFor('Faculty');
+    const other = await tokenFor('Faculty');
     const res = await post({ ...validQuestion(), owner: other.id });
     expect(res.status).toBe(201);
     expect(res.body.owner).toBe(faculty.id);
