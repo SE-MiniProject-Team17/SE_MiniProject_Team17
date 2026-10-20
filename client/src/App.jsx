@@ -8,6 +8,8 @@ import HelpPage from './pages/HelpPage';
 import ForbiddenPage from './pages/ForbiddenPage';
 import NotFoundPage from './pages/NotFoundPage';
 import PlaceholderPage from './pages/PlaceholderPage';
+import QuestionBankPage from './pages/QuestionBankPage';
+import AddQuestionPage from './pages/AddQuestionPage';
 
 /*
  * All routes in one place. When you build your module, replace its
@@ -40,7 +42,8 @@ export default function App() {
 
           {/* Faculty only */}
           <Route element={<ProtectedRoute roles={[ROLES.FACULTY]} />}>
-            <Route path="/questions/*" element={<PlaceholderPage title="Question Bank" issues="#13–#15" />} />
+            <Route path="/questions" element={<QuestionBankPage />} />
+            <Route path="/questions/new" element={<AddQuestionPage />} />
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />

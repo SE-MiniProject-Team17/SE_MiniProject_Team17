@@ -38,5 +38,9 @@
     "jest": "^29.7.0",
     "mongodb-memory-server": "^11.3.0",
     "supertest": "^7.3.1"
-  }
+  },
+  "overrides": {
+    "mongodb": "7.5.0"
+  },
+  "//overrides": "mongodb 7.6+/7.7 sends an empty handshake under Jest (driver bug NODE-7832) so test DB connections fail; pinned to 7.5.0 until the fix ships."
 }

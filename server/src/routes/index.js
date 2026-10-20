@@ -4,6 +4,9 @@ const router = express.Router();
 
 router.get('/health', (req, res) => res.json({ status: 'ok' }));
 
+// Question Bank (#13-#15)
+router.use('/questions', require('./questionRoutes'));
+
 /*
  * Each module mounts its routes here. Add ONE line for your module, e.g.
  *

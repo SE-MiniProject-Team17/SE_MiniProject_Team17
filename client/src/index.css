@@ -45,3 +45,18 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 
 .field-error { color: var(--danger); margin: 2px 0 0; font-size: 0.9rem; }
 .alert { color: var(--danger); background: #fdecea; padding: 10px 12px; border-radius: 6px; }
+
+/* Shared helpers added with #13 */
+.page-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.button {
+  display: inline-block; padding: 10px 14px; border-radius: 6px;
+  background: var(--primary); color: var(--primary-text); text-decoration: none;
+}
+.success { color: #067647; background: #ecfdf3; padding: 10px 12px; border-radius: 6px; }
+.small { font-size: 0.85rem; font-weight: 400; }
+.narrow-wide { max-width: 640px; }
+fieldset { border: 1px solid var(--border); border-radius: 6px; margin: 12px 0 0; padding: 8px 12px 12px; }
+legend { font-weight: 600; padding: 0 4px; }
+.option-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.option-row input:not([type='radio']) { flex: 1; }
+.option-label { margin: 0; width: 1.2em; }
