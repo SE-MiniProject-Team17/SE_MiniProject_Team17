@@ -24,4 +24,7 @@ router.use('/questions', require('./questionRoutes'));
  *   router.use('/groups', require('./groupRoutes'));              // Collaboration (#25-#27)
  */
 
+// Study Groups (Issue #25)
+router.use('/groups', require('./groupRoutes'));
+
 module.exports = router;
