@@ -34,6 +34,30 @@ describe('API base', () => {
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
   });
 
+  test('unexpected errors return a generic 500 without leaking internal details', async () => {
+    const testApp = express();
+
+    testApp.get('/trigger-error', (req, res, next) => {
+      const err = new Error('secret database connection string');
+      err.stack = 'SECRET_STACK_TRACE';
+      next(err);
+    });
+
+    testApp.use(errorHandler);
+
+    const res = await request(testApp).get('/trigger-error');
+
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Something went wrong',
+      },
+    });
+    expect(JSON.stringify(res.body)).not.toContain('secret database');
+    expect(JSON.stringify(res.body)).not.toContain('SECRET_STACK_TRACE');
+  });
+
   test('security headers are set (helmet)', async () => {
     const res = await request(app).get('/api/health');
     expect(res.headers['x-content-type-options']).toBe('nosniff');
