@@ -31,3 +31,37 @@ async function topics(req, res, next) {
 }
 
 module.exports = { create, search, topics };
+
+/** #15 – GET /api/questions/:id -> 200 full question (any Faculty; 404 if unavailable) */
+async function getOne(req, res, next) {
+  try {
+    const q = await questionService.getQuestion(req.params.id);
+    return res.json(questionService.toFullQuestion(q));
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/** #15 – PUT /api/questions/:id (owner only, fields already merged + validated) -> 200 { id, updatedAt } */
+async function update(req, res, next) {
+  try {
+    const q = await questionService.updateQuestion(req.question, req.body);
+    return res.json({ id: q.id, updatedAt: q.updatedAt });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/** #15 – DELETE /api/questions/:id (owner only) -> 204 */
+async function remove(req, res, next) {
+  try {
+    await questionService.removeQuestion(req.question);
+    return res.status(204).end();
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports.getOne = getOne;
+module.exports.update = update;
+module.exports.remove = remove;

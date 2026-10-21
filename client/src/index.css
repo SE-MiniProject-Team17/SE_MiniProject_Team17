@@ -82,3 +82,12 @@ tbody tr:last-child td { border-bottom: 0; }
 .badge-hard { background: #fdecea; color: #b42318; }
 .pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 12px; }
 .pager button { margin-top: 0; }
+
+/* Edit / remove actions (#15) */
+.actions { white-space: nowrap; }
+.actions > a, .actions > button { margin-right: 12px; }
+.confirm { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; white-space: normal; }
+.confirm button { margin-top: 0; padding: 6px 10px; }
+button.danger { background: var(--danger); }
+button.secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.danger-link { color: var(--danger); }

@@ -12,3 +12,8 @@ export const searchQuestions = (params = {}) => {
 };
 
 export const listTopics = () => api.get('/questions/topics').then((r) => r.data.topics);
+
+// #15
+export const getQuestion = (id) => api.get(`/questions/${id}`).then((r) => r.data);
+export const updateQuestion = (id, data) => api.put(`/questions/${id}`, data).then((r) => r.data);
+export const deleteQuestion = (id) => api.delete(`/questions/${id}`);
