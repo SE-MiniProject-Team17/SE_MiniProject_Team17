@@ -7,20 +7,24 @@ const mongoose = require('mongoose');
 const request = require('supertest');
 const app = require('../src/app');
 const { Question } = require('../src/models/Question');
+const User = require('../src/models/User');
 const { startDB, clearDB, stopDB } = require('./helpers/db');
 const { tokenFor } = require('./helpers/auth');
 
 const URL = '/api/questions';
-const faculty = tokenFor('Faculty');
-const otherFaculty = tokenFor('Faculty');
-const student = tokenFor('Student');
+
+// Fixed user ids so seeded questions can point at them; tokens (with sessions) are made before each test.
+const FACULTY_ID = new mongoose.Types.ObjectId().toString();
+const OTHER_FACULTY_ID = new mongoose.Types.ObjectId().toString();
+let faculty;
+let student;
 
 const get = (query = {}, user = faculty, path = URL) =>
   request(app).get(path).query(query).set('Authorization', `Bearer ${user.token}`);
 
 /** Builds a question document; `minutesAgo` controls createdAt so ordering is predictable. */
 let counter = 0;
-function makeQuestion({ text, topic = 'General', difficulty = 'Easy', owner = faculty.id, minutesAgo }) {
+function makeQuestion({ text, topic = 'General', difficulty = 'Easy', owner = FACULTY_ID, minutesAgo }) {
   counter += 1;
   const createdAt = new Date(Date.now() - (minutesAgo ?? counter) * 60 * 1000);
   return {
@@ -38,6 +42,10 @@ function makeQuestion({ text, topic = 'General', difficulty = 'Easy', owner = fa
 const seed = (docs) => Question.insertMany(docs, { timestamps: false });
 
 beforeAll(startDB);
+beforeEach(async () => {
+  faculty = await tokenFor('Faculty', FACULTY_ID);
+  student = await tokenFor('Student');
+});
 afterEach(clearDB);
 afterAll(stopDB);
 
@@ -47,7 +55,7 @@ describe('TC-QB-05 – list, keyword search and filters', () => {
     const docs = [
       makeQuestion({ text: 'What is photosynthesis?', topic: 'Biology', difficulty: 'Medium', minutesAgo: 1 }),
       makeQuestion({ text: 'Where does photosynthesis happen in a plant?', topic: 'Biology', difficulty: 'Easy', minutesAgo: 2 }),
-      makeQuestion({ text: 'Which gas is released by Photosynthesis?', topic: 'Chemistry', difficulty: 'Medium', minutesAgo: 3, owner: otherFaculty.id }),
+      makeQuestion({ text: 'Which gas is released by Photosynthesis?', topic: 'Chemistry', difficulty: 'Medium', minutesAgo: 3, owner: OTHER_FACULTY_ID }),
       makeQuestion({ text: 'What is a cell membrane made of?', topic: 'Biology', difficulty: 'Medium', minutesAgo: 4 }),
       makeQuestion({ text: 'What is 2 + 2?', topic: 'Arithmetic', difficulty: 'Easy', minutesAgo: 5 }),
     ];
@@ -70,9 +78,17 @@ describe('TC-QB-05 – list, keyword search and filters', () => {
         text: 'What is photosynthesis?',
         topic: 'Biology',
         difficulty: 'Medium',
-        owner: expect.objectContaining({ id: faculty.id }),
+        owner: expect.objectContaining({ id: FACULTY_ID }),
       })
     );
+  });
+
+  test('shows the owner\'s full name when the owner account exists', async () => {
+    await User.create({ _id: FACULTY_ID, fullName: 'Dr. Asha Rao', email: 'asha@example.com', passwordHash: 'x', role: 'Faculty' });
+    const res = await get({ q: 'cell membrane' });
+    expect(res.body.questions[0].owner).toEqual({ id: FACULTY_ID, name: 'Dr. Asha Rao' });
+    const other = await get({ q: 'gas is released' });
+    expect(other.body.questions[0].owner).toEqual({ id: OTHER_FACULTY_ID, name: null });
   });
 
   test('the list does not include the options or the correct answer', async () => {

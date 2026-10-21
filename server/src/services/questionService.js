@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
 const { Question } = require('../models/Question');
+const User = require('../models/User');
 
 /**
  * Question Bank Service (SAD 3.4) – the business rules for questions.
@@ -37,28 +37,29 @@ async function searchQuestions({ q, topic, difficulty, page = 1, limit = 20 } = 
   if (topic && topic.trim()) filter.topic = { $regex: `^${escapeRegex(topic.trim())}$`, $options: 'i' };
   if (difficulty) filter.difficulty = difficulty;
 
-  let find = Question.find(filter)
-    .select('text topic difficulty owner createdAt')
-    .sort({ createdAt: -1, _id: -1 })
-    .skip((page - 1) * limit)
-    .limit(limit)
-    .lean();
-  // Show the owner's name once the User model from #4 exists.
-  if (mongoose.modelNames().includes('User')) find = find.populate('owner', 'fullName');
+  const [docs, total] = await Promise.all([
+    Question.find(filter)
+      .select('text topic difficulty owner createdAt')
+      .sort({ createdAt: -1, _id: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    Question.countDocuments(filter),
+  ]);
 
-  const [docs, total] = await Promise.all([find, Question.countDocuments(filter)]);
+  // Look up owner names in one query. If an owner account no longer exists, the name is null.
+  const ownerIds = [...new Set(docs.map((d) => d.owner.toString()))];
+  const owners = await User.find({ _id: { $in: ownerIds } }).select('fullName').lean();
+  const nameById = new Map(owners.map((u) => [u._id.toString(), u.fullName]));
 
-  const questions = docs.map((d) => {
-    const owner = d.owner && d.owner._id ? d.owner : { _id: d.owner };
-    return {
-      id: d._id.toString(),
-      text: d.text,
-      topic: d.topic,
-      difficulty: d.difficulty,
-      owner: { id: owner._id.toString(), name: owner.fullName || null },
-      createdAt: d.createdAt,
-    };
-  });
+  const questions = docs.map((d) => ({
+    id: d._id.toString(),
+    text: d.text,
+    topic: d.topic,
+    difficulty: d.difficulty,
+    owner: { id: d.owner.toString(), name: nameById.get(d.owner.toString()) || null },
+    createdAt: d.createdAt,
+  }));
   return { questions, total, page, limit };
 }
 
