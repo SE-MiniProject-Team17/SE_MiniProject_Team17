@@ -154,6 +154,42 @@ describe('TC-QB-04 – exactly four different options and a valid correct option
     expect(res.status).toBe(400);
     expect(res.body.error.field).toBe('text');
   });
+
+  test('options must be an array', async () => {
+    const res = await post({ ...validQuestion(), options: 'A,B,C,D' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    expect(res.body.error.field).toBe('options');
+    expect(await Question.countDocuments()).toBe(0);
+  });
+
+  test('a whitespace-only option is rejected', async () => {
+    const res = await post({
+      ...validQuestion(),
+      options: ['3', '   ', '5', '6'],
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.field).toBe('options');
+    expect(await Question.countDocuments()).toBe(0);
+  });
+
+  test('an option exactly 200 characters long is accepted', async () => {
+    const res = await post({
+      ...validQuestion(),
+      options: ['a'.repeat(200), 'b'.repeat(200), 'c'.repeat(200), 'd'.repeat(200)],
+    });
+
+    expect(res.status).toBe(201);
+  });
+
+  test('a null explanation is accepted as optional', async () => {
+    const res = await post({ ...validQuestion(), explanation: null });
+
+    expect(res.status).toBe(201);
+  });
+
 });
 
 describe('Roles – REQ-QB-07, SEC-QZ-01', () => {

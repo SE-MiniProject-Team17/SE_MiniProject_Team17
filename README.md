@@ -52,6 +52,10 @@ cd server && npm test
 ```
 Tests use an in-memory MongoDB, so they don't touch your local database. The first run downloads it (~100 MB).
 
+## API documentation
+
+See [`docs/API.md`](docs/API.md) for the implemented API endpoint, request validation rules, authorization requirements, and standardized error responses.
+
 ## Team
 
 | Member | Area | Issues |
