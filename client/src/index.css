@@ -60,3 +60,25 @@ legend { font-weight: 600; padding: 0 4px; }
 .option-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
 .option-row input:not([type='radio']) { flex: 1; }
 .option-label { margin: 0; width: 1.2em; }
+
+/* Question Bank list (#14) */
+.search-bar { display: flex; flex-direction: row; gap: 8px; margin-top: 16px; }
+.search-bar input { flex: 1; min-width: 0; }
+.search-bar button { margin-top: 0; }
+.filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; margin: 12px 0 16px; }
+.filters label { display: flex; flex-direction: column; gap: 4px; margin: 0; }
+.filters .link-button { margin-bottom: 10px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.empty { padding: 24px; text-align: center; background: var(--surface); border: 1px dashed var(--border); border-radius: 6px; color: var(--muted); }
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-size: 0.9rem; color: var(--muted); }
+tbody tr:last-child td { border-bottom: 0; }
+.question-text { max-width: 480px; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.85rem; }
+.badge-easy { background: #ecfdf3; color: #067647; }
+.badge-medium { background: #fff6e5; color: #93370d; }
+.badge-hard { background: #fdecea; color: #b42318; }
+.pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 12px; }
+.pager button { margin-top: 0; }

@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, query } = require('express-validator');
 const { LIMITS, OPTION_LABELS, DIFFICULTIES } = require('../models/Question');
 
 /**
@@ -74,4 +74,37 @@ const questionRules = [
     .withMessage(`Explanation must be at most ${LIMITS.EXPLANATION_MAX} characters`),
 ];
 
-module.exports = { questionRules };
+
+/**
+ * #14 – query parameters for GET /api/questions (REQ-QB-04).
+ *   q          keyword in the question text (optional, ≤ 100 chars)
+ *   topic      exact topic, case-insensitive (optional, ≤ 50 chars)
+ *   difficulty Easy | Medium | Hard (optional)
+ *   page/limit paging (defaults 1 and 20, limit ≤ 100)
+ */
+const searchRules = [
+  query('q')
+    .optional()
+    .isString()
+    .withMessage('Keyword must be text')
+    .bail()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Keyword must be at most 100 characters'),
+  query('topic')
+    .optional()
+    .isString()
+    .withMessage('Topic must be text')
+    .bail()
+    .trim()
+    .isLength({ max: LIMITS.TOPIC_MAX })
+    .withMessage(`Topic must be at most ${LIMITS.TOPIC_MAX} characters`),
+  query('difficulty')
+    .optional({ values: 'falsy' })
+    .isIn(DIFFICULTIES)
+    .withMessage(`Difficulty must be one of ${DIFFICULTIES.join(', ')}`),
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a whole number of 1 or more').toInt(),
+  query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100').toInt(),
+];
+
+module.exports = { questionRules, searchRules };
