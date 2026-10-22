@@ -10,16 +10,6 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: [100, 'Full name must be at most 100 characters'],
     },
-    institution: {
-      type: String,
-      trim: true,
-      maxlength: [200, 'Institution must be at most 200 characters'],
-      default: '',
-    },
-    profilePicture: {
-      type: String,
-      default: '',
-    },
     email: {
       type: String,
       required: [true, 'Email is required'],
