@@ -7,8 +7,8 @@ on:
     branches: [main]
   push:
     branches:
-      -main
-      -"feature/**"
+      - main
+      - "feature/**"
 
 jobs:
   server:
