@@ -55,7 +55,7 @@ describe('POST /api/auth/login', () => {
     expect(await Session.countDocuments({ user: user._id })).toBe(1);
   });
 
-  
+
   test('successful login responds within 2 seconds', async () => {
     await createUser();
 
@@ -195,7 +195,7 @@ describe('POST /api/auth/login', () => {
     expect(updatedUser.lockedUntil).toBeNull();
   });
 
-  
+
   test('unknown email and wrong password return identical credential errors', async () => {
     await createUser();
 
