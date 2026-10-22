@@ -1,3 +1,5 @@
+﻿import QuizListPage from './pages/QuizListPage';
+import QuizAttemptPage from './pages/QuizAttemptPage';
 import { Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -10,11 +12,8 @@ import NotFoundPage from './pages/NotFoundPage';
 import PlaceholderPage from './pages/PlaceholderPage';
 import QuestionBankPage from './pages/QuestionBankPage';
 import AddQuestionPage from './pages/AddQuestionPage';
+import AttemptResultPage from './pages/AttemptResultPage';
 
-/*
- * All routes in one place. When you build your module, replace its
- * PlaceholderPage with your real page component (keep the same path and roles).
- */
 export default function App() {
   return (
     <>
@@ -23,21 +22,58 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<PlaceholderPage title="Register" issues="#4" />} />
+          <Route
+            path="/register"
+            element={<PlaceholderPage title="Register" issues="#4" />}
+          />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/forbidden" element={<ForbiddenPage />} />
 
           {/* Any logged-in user */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<PlaceholderPage title="My Profile" issues="#6" />} />
-            <Route path="/groups/*" element={<PlaceholderPage title="Study Groups" issues="#25–#27" />} />
+            <Route
+              path="/profile"
+              element={<PlaceholderPage title="My Profile" issues="#6" />}
+            />
+            <Route
+              path="/groups/*"
+              element={<PlaceholderPage title="Study Groups" issues="#25â€“#27" />}
+            />
           </Route>
 
           {/* Students and Faculty */}
-          <Route element={<ProtectedRoute roles={[ROLES.STUDENT, ROLES.FACULTY]} />}>
-            <Route path="/materials/*" element={<PlaceholderPage title="Study Materials" issues="#7–#12" />} />
-            <Route path="/quizzes/*" element={<PlaceholderPage title="Quizzes" issues="#16–#20" />} />
-            <Route path="/performance/*" element={<PlaceholderPage title="Performance" issues="#22–#24" />} />
+          <Route
+            element={
+              <ProtectedRoute roles={[ROLES.STUDENT, ROLES.FACULTY]} />
+            }
+          >
+            <Route
+              path="/materials/*"
+              element={
+                <PlaceholderPage title="Study Materials" issues="#7â€“#12" />
+              }
+            />
+
+            <Route
+              path="/quizzes/attempts/:attemptId/result"
+              element={<AttemptResultPage />}
+            />
+
+
+
+<Route element={<ProtectedRoute roles={[ROLES.STUDENT]} />}>
+  <Route path="/quizzes" element={<QuizListPage />} />
+  <Route
+    path="/quizzes/:quizId/attempt"
+    element={<QuizAttemptPage />}
+  />
+</Route>
+
+
+            <Route
+              path="/performance/*"
+              element={<PlaceholderPage title="Performance" issues="#22â€“#24" />}
+            />
           </Route>
 
           {/* Faculty only */}
