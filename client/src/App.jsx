@@ -55,6 +55,12 @@ export default function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
+      <footer className="site-footer">
+        <div>
+          <span>Study &amp; Quiz · Team 17 SE Mini Project</span>
+          <span>Need help? See the Help page.</span>
+        </div>
+      </footer>
     </>
   );
 }
