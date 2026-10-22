@@ -91,3 +91,13 @@ tbody tr:last-child td { border-bottom: 0; }
 button.danger { background: var(--danger); }
 button.secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
 .danger-link { color: var(--danger); }
+
+/* Quizzes (#16) */
+.badge-draft { background: #eef2ff; color: #3538cd; }
+.two-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 16px; }
+.two-cols > div { display: flex; flex-direction: column; gap: 6px; }
+.selected-list, .pick-list { margin: 8px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.pick-list { list-style: none; padding-left: 0; max-height: 320px; overflow-y: auto; }
+.selected-list li, .pick-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.pick-list li { padding: 6px 0; border-bottom: 1px solid var(--border); }
+.pick-list button, .selected-list button { margin-top: 0; padding: 4px 10px; }
