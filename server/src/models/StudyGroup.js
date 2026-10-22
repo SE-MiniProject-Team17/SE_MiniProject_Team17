@@ -6,16 +6,19 @@ const studyGroupSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      maxlength: 100,
     },
     description: {
       type: String,
       trim: true,
+      maxlength: 500,
       default: '',
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index: true,
     },
     members: [
       {
@@ -27,9 +30,6 @@ const studyGroupSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Helps queries that find groups by membership.
-studyGroupSchema.index({ members: 1 });
+studyGroupSchema.index({ _id: 1, members: 1 });
 
-const StudyGroup = mongoose.model('StudyGroup', studyGroupSchema);
-
-module.exports = StudyGroup;
+module.exports = mongoose.model('StudyGroup', studyGroupSchema);

@@ -74,7 +74,7 @@ async function listTopics() {
 /** Fields an owner may change (REQ-QB-05). `owner` is never editable. */
 const EDITABLE_FIELDS = ['text', 'options', 'correctOption', 'topic', 'difficulty', 'explanation'];
 
-const unavailable = () => AppError.notFound('Question unavailable');
+const unavailable = () => AppError.unavailable('Question');
 
 /** #15 / #44 – finds a question or throws 404 "Question unavailable" (also for malformed ids). */
 async function getQuestion(id) {

@@ -28,16 +28,22 @@ export default function LoginPage() {
   }
 
   return (
-    <section className="narrow">
-      <h1>Log in</h1>
-      {error && <p className="alert" role="alert">{error}</p>}
-      <form onSubmit={handleSubmit} noValidate>
-        <label htmlFor="email">Email</label>
-        <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <label htmlFor="password">Password</label>
-        <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <button type="submit" disabled={busy}>{busy ? 'Logging in…' : 'Log in'}</button>
-      </form>
-    </section>
+    <div className="auth-page">
+      <section className="narrow">
+        <div className="auth-header">
+          <span className="brand-mark" aria-hidden="true">SQ</span>
+          <h1>Welcome back</h1>
+          <p className="muted">Log in to continue to Study &amp; Quiz.</p>
+        </div>
+        {error && <p className="alert" role="alert">{error}</p>}
+        <form onSubmit={handleSubmit} noValidate>
+          <label htmlFor="email">Email</label>
+          <input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <label htmlFor="password">Password</label>
+          <input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <button type="submit" disabled={busy}>{busy ? 'Logging in…' : 'Log in'}</button>
+        </form>
+      </section>
+    </div>
   );
 }
