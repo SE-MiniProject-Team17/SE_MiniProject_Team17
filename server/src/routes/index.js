@@ -11,6 +11,8 @@ router.use('/auth', require('./authRoutes'));
 // Question Bank (#13-#15)
 router.use('/questions', require('./questionRoutes'));
 
+router.use('/account', require('./accountRoutes')); // User profile (#6)
+
 /*
  * Each module mounts its routes here. Add ONE line for your module, e.g.
  *
