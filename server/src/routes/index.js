@@ -13,6 +13,11 @@ router.use('/questions', require('./questionRoutes'));
 router.use('/quizzes', require('./quizRoutes'));
 router.use('/attempts', require('./attemptRoutes'));
 
+// User profile (#6)
+router.use('/account', require('./accountRoutes'));
+
+// Quizzes – authoring (#16); quiz taking (#17-#19) adds its routes to quizRoutes too
+
 /*
  * Each module mounts its routes here. Add ONE line for your module, e.g.
  *
@@ -25,5 +30,8 @@ router.use('/attempts', require('./attemptRoutes'));
  *   router.use('/performance', require('./performanceRoutes'));   // Analytics (#22-#24)
  *   router.use('/groups', require('./groupRoutes'));              // Collaboration (#25-#27)
  */
+
+// Study Groups (Issue #25)
+router.use('/groups', require('./groupRoutes'));
 
 module.exports = router;

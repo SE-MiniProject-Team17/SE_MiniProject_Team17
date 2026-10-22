@@ -6,6 +6,7 @@ const User = require('../src/models/User');
 const Session = require('../src/models/Session');
 const ROLES = require('../src/config/roles');
 const { startDB, clearDB, stopDB } = require('./helpers/db');
+const { performance } = require('node:perf_hooks');
 
 describe('POST /api/auth/login', () => {
   let user;
@@ -52,6 +53,25 @@ describe('POST /api/auth/login', () => {
     expect(res.body.user).not.toHaveProperty('passwordHash');
 
     expect(await Session.countDocuments({ user: user._id })).toBe(1);
+  });
+
+
+  test('successful login responds within 2 seconds', async () => {
+    await createUser();
+
+    const start = performance.now();
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({
+        email: 'student@example.com',
+        password: 'ValidPass123',
+      });
+
+    const elapsedMs = performance.now() - start;
+
+    expect(res.status).toBe(200);
+    expect(elapsedMs).toBeLessThan(2000);
   });
 
   test('unknown email returns generic invalid credentials', async () => {
@@ -174,4 +194,35 @@ describe('POST /api/auth/login', () => {
     expect(updatedUser.failedLoginAttempts).toBe(0);
     expect(updatedUser.lockedUntil).toBeNull();
   });
+
+
+  test('unknown email and wrong password return identical credential errors', async () => {
+    await createUser();
+
+    const unknownEmailResponse = await request(app)
+      .post('/api/auth/login')
+      .send({
+        email: 'unknown@example.com',
+        password: 'WrongPass123',
+      });
+
+    const wrongPasswordResponse = await request(app)
+      .post('/api/auth/login')
+      .send({
+        email: 'student@example.com',
+        password: 'WrongPass123',
+      });
+
+    expect(unknownEmailResponse.status).toBe(401);
+    expect(wrongPasswordResponse.status).toBe(401);
+
+    expect(unknownEmailResponse.body.error.message)
+      .toBe('Invalid email or password');
+    expect(wrongPasswordResponse.body.error.message)
+      .toBe('Invalid email or password');
+
+    expect(unknownEmailResponse.body.error)
+      .toEqual(wrongPasswordResponse.body.error);
+  });
+
 });

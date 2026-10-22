@@ -2,8 +2,13 @@
 export default function PlaceholderPage({ title, issues }) {
   return (
     <section>
-      <h1>{title}</h1>
-      <p className="muted">Coming soon{issues ? ` (${issues})` : ''}.</p>
+      <div className="page-header">
+        <h1>{title}</h1>
+      </div>
+      <div className="empty">
+        <strong>Coming soon</strong>
+        <p className="small">This part of the platform is being built{issues ? ` (${issues})` : ''}.</p>
+      </div>
     </section>
   );
 }

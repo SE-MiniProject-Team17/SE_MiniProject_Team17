@@ -1,4 +1,4 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 /**
  * Quiz (SRS REQ-QZ-01 to REQ-QZ-05, SAD ADR-2).
@@ -8,7 +8,7 @@
  *            explanation, topic, difficulty) made at publication, so later edits or removal of bank
  *            questions do not change the published quiz or any attempt (REQ-QZ-04).
  *
- * Shared with the quiz-taking part (#17ΓÇô#19, VedhV): read `status`, `availableFrom`, `availableUntil`,
+ * Shared with the quiz-taking part (#17G��#19, VedhV): read `status`, `availableFrom`, `availableUntil`,
  * `timeLimitMinutes` and the `questions` copies. Never send `correctOption`/`explanation` to Students
  * before they submit (SEC-QZ-02).
  */
