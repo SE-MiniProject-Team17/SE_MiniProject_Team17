@@ -65,3 +65,40 @@ See [`docs/API.md`](docs/API.md) for the implemented API endpoint, request valid
 | Pushkar Kulkarni | Performance, Collaboration, Integration | #22 â€“ #32 |
 
 See **CONTRIBUTING.md** for how we work (branches, PRs, API conventions).
+
+## Continuous Integration (CI)
+
+GitHub Actions runs the workflow defined in `.github/workflows/ci.yml`.
+
+### Automated checks
+
+For pull requests targeting `main`, CI runs these jobs independently:
+
+- **Server tests** — installs server dependencies with `npm ci` and runs `npm test`.
+- **Client build** — installs client dependencies with `npm ci` and runs `npm run build`.
+
+The workflow also runs when commits are pushed directly to `main`.
+
+### Checking a workflow result
+
+1. Open the pull request on GitHub.
+2. Review the **Server tests** and **Client build** checks.
+3. Both checks should pass before merging.
+4. If a check fails, open its details in the Actions logs, identify the failing step, fix the issue, and push a new commit.
+
+A passing CI run confirms that the configured tests and build completed successfully; it does not guarantee that every requirement or behavior has been tested.
+
+### Environment variables and secrets
+
+For local server configuration, copy `server/.env.example` to `server/.env` and fill in the required values for your environment.
+
+- `PORT` configures the server port.
+- `MONGO_URI` specifies the MongoDB connection string.
+- `JWT_SECRET` is used for JWT signing and must be kept private.
+- `CLIENT_ORIGIN` specifies the permitted client origin.
+
+Never commit `.env` files containing real credentials, tokens, or secrets. Keep sensitive values out of source code and logs. If future CI checks require secrets, configure them through the repository's GitHub Actions secrets settings rather than hard-coding them in the workflow.
+
+### Required checks and branch protection
+
+Repository administrators should configure branch protection or a ruleset for `main` to require the **Server tests** and **Client build** status checks before merging pull requests, if supported by the repository's permissions and settings.
