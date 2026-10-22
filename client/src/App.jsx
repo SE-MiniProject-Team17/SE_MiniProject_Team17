@@ -10,6 +10,8 @@ import NotFoundPage from './pages/NotFoundPage';
 import PlaceholderPage from './pages/PlaceholderPage';
 import QuestionBankPage from './pages/QuestionBankPage';
 import QuestionFormPage from './pages/QuestionFormPage';
+import QuizzesPage from './pages/QuizzesPage';
+import QuizFormPage from './pages/QuizFormPage';
 
 /*
  * All routes in one place. When you build your module, replace its
@@ -36,7 +38,8 @@ export default function App() {
           {/* Students and Faculty */}
           <Route element={<ProtectedRoute roles={[ROLES.STUDENT, ROLES.FACULTY]} />}>
             <Route path="/materials/*" element={<PlaceholderPage title="Study Materials" issues="#7–#12" />} />
-            <Route path="/quizzes/*" element={<PlaceholderPage title="Quizzes" issues="#16–#20" />} />
+            <Route path="/quizzes" element={<QuizzesPage />} />
+            <Route path="/quizzes/*" element={<PlaceholderPage title="Quizzes" issues="#17–#19" />} />
             <Route path="/performance/*" element={<PlaceholderPage title="Performance" issues="#22–#24" />} />
           </Route>
 
@@ -45,6 +48,8 @@ export default function App() {
             <Route path="/questions" element={<QuestionBankPage />} />
             <Route path="/questions/new" element={<QuestionFormPage key="new" />} />
             <Route path="/questions/:id/edit" element={<QuestionFormPage key="edit" />} />
+            <Route path="/quizzes/new" element={<QuizFormPage key="new" />} />
+            <Route path="/quizzes/:id/edit" element={<QuizFormPage key="edit" />} />
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />

@@ -11,6 +11,9 @@ router.use('/auth', require('./authRoutes'));
 // Question Bank (#13-#15)
 router.use('/questions', require('./questionRoutes'));
 
+// Quizzes – authoring (#16); quiz taking (#17-#19) adds its routes to quizRoutes too
+router.use('/quizzes', require('./quizRoutes'));
+
 /*
  * Each module mounts its routes here. Add ONE line for your module, e.g.
  *
