@@ -8,7 +8,7 @@ const AppError = require('../utils/AppError');
  * Deleting quizzes and the "after an attempt has started" rules are #42.
  */
 
-const unavailable = () => AppError.notFound('Quiz unavailable');
+const unavailable = () => AppError.unavailable('Quiz');
 const EDITABLE_FIELDS = ['title', 'description', 'timeLimitMinutes', 'availableFrom', 'availableUntil', 'questionIds'];
 
 /** Checks that every selected bank question still exists (REQ-QZ-18); 404 "Question unavailable" otherwise. */

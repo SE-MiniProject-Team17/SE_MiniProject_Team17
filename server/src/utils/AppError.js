@@ -30,6 +30,15 @@ class AppError extends Error {
     return new AppError(404, 'NOT_FOUND', message);
   }
 
+  /**
+   * SRS REQ-QZ-18: a quiz, question or attempt that does not exist (or cannot be retrieved).
+   * Always the same 404 with "<Resource> unavailable" and no other details.
+   *   throw AppError.unavailable('Quiz');  throw AppError.unavailable('Attempt');
+   */
+  static unavailable(resource) {
+    return new AppError(404, 'NOT_FOUND', `${resource} unavailable`);
+  }
+
   static conflict(code, message) {
     return new AppError(409, code, message);
   }
