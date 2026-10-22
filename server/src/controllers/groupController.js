@@ -1,3 +1,4 @@
+
 const groupService = require('../services/groupService');
 
 async function create(req, res, next) {
@@ -38,7 +39,7 @@ async function join(req, res, next) {
 
 async function getMine(req, res, next) {
   try {
-    const groups = await groupService.getMyGroups(req.user.id);
+    const groups = await groupService.listMyGroups(req.user.id);
 
     return res.status(200).json({
       groups: groups.map((group) => ({
