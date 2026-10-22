@@ -1,5 +1,7 @@
+const mongoose = require('mongoose');
 const { Question } = require('../models/Question');
 const User = require('../models/User');
+const AppError = require('../utils/AppError');
 
 /**
  * Question Bank Service (SAD 3.4) – the business rules for questions.
@@ -69,4 +71,84 @@ async function listTopics() {
   return topics.sort((a, b) => a.localeCompare(b));
 }
 
-module.exports = { createQuestion, searchQuestions, listTopics };
+/** Fields an owner may change (REQ-QB-05). `owner` is never editable. */
+const EDITABLE_FIELDS = ['text', 'options', 'correctOption', 'topic', 'difficulty', 'explanation'];
+
+const unavailable = () => AppError.notFound('Question unavailable');
+
+/** #15 / #44 – finds a question or throws 404 "Question unavailable" (also for malformed ids). */
+async function getQuestion(id) {
+  if (!mongoose.isValidObjectId(id)) throw unavailable();
+  const question = await Question.findById(id);
+  if (!question) throw unavailable();
+  return question;
+}
+
+/** #15 / #41 – the question, but only if `userId` owns it (REQ-QB-07: otherwise "Access denied"). */
+async function getOwnQuestion(id, userId) {
+  const question = await getQuestion(id);
+  if (question.owner.toString() !== String(userId)) throw AppError.accessDenied();
+  return question;
+}
+
+/** The full question as sent to Faculty (includes the answer key – the bank is Faculty-only). */
+function toFullQuestion(q) {
+  return {
+    id: q.id,
+    text: q.text,
+    options: q.options,
+    correctOption: q.correctOption,
+    topic: q.topic,
+    difficulty: q.difficulty,
+    explanation: q.explanation,
+    owner: q.owner.toString(),
+    createdAt: q.createdAt,
+    updatedAt: q.updatedAt,
+  };
+}
+
+/**
+ * Returns the question's current editable values with the requested changes applied.
+ * Used before validation so a partial edit is checked with the same rules as a new question.
+ */
+function mergeEdits(question, changes) {
+  const merged = {};
+  EDITABLE_FIELDS.forEach((f) => {
+    const current = question[f];
+    merged[f] = Array.isArray(current) ? [...current] : current;
+    if (Object.prototype.hasOwnProperty.call(changes || {}, f)) merged[f] = changes[f];
+  });
+  return merged;
+}
+
+/** #15 – saves already-validated values on a question the caller owns. */
+async function updateQuestion(question, values) {
+  question.text = values.text;
+  question.options = values.options.map((o) => o.trim());
+  question.correctOption = values.correctOption;
+  question.topic = values.topic;
+  question.difficulty = values.difficulty;
+  question.explanation = values.explanation || '';
+  await question.save();
+  return question;
+}
+
+/**
+ * #15 – removes a question the caller owns (REQ-QB-06).
+ * Published quizzes keep their own copy of the question (SAD ADR-2), so they are not affected.
+ */
+async function removeQuestion(question) {
+  await Question.deleteOne({ _id: question._id });
+}
+
+module.exports = {
+  createQuestion,
+  searchQuestions,
+  listTopics,
+  getQuestion,
+  getOwnQuestion,
+  toFullQuestion,
+  mergeEdits,
+  updateQuestion,
+  removeQuestion,
+};

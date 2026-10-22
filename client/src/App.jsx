@@ -9,7 +9,7 @@ import ForbiddenPage from './pages/ForbiddenPage';
 import NotFoundPage from './pages/NotFoundPage';
 import PlaceholderPage from './pages/PlaceholderPage';
 import QuestionBankPage from './pages/QuestionBankPage';
-import AddQuestionPage from './pages/AddQuestionPage';
+import QuestionFormPage from './pages/QuestionFormPage';
 
 /*
  * All routes in one place. When you build your module, replace its
@@ -43,7 +43,8 @@ export default function App() {
           {/* Faculty only */}
           <Route element={<ProtectedRoute roles={[ROLES.FACULTY]} />}>
             <Route path="/questions" element={<QuestionBankPage />} />
-            <Route path="/questions/new" element={<AddQuestionPage />} />
+            <Route path="/questions/new" element={<QuestionFormPage key="new" />} />
+            <Route path="/questions/:id/edit" element={<QuestionFormPage key="edit" />} />
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />

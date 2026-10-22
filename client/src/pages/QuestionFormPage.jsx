@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import FieldError from '../components/FieldError';
 import { apiError } from '../api/client';
-import { createQuestion } from '../api/questions';
+import { createQuestion, getQuestion, updateQuestion } from '../api/questions';
+import { useAuth } from '../context/AuthContext';
 
 // Same limits as the server (SRS REQ-QB-01). The server always re-checks.
 const LIMITS = { text: 500, option: 200, topic: 50, explanation: 300 };
@@ -44,13 +45,48 @@ function validate(form) {
   return errors;
 }
 
-/** #13 – Faculty adds a question to the question bank. */
-export default function AddQuestionPage() {
+/**
+ * #13 – Faculty adds a question (/questions/new).
+ * #15 – the owner edits a question (/questions/:id/edit); same form and rules (REQ-QB-05).
+ */
+export default function QuestionFormPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const { user } = useAuth();
+  const isEdit = Boolean(id);
+
   const [form, setForm] = useState(empty);
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(isEdit);
+  const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    if (!isEdit) return;
+    let active = true;
+    getQuestion(id)
+      .then((q) => {
+        if (!active) return;
+        if (q.owner !== user?.id) {
+          setLoadError('Access denied');
+          return;
+        }
+        setForm({
+          text: q.text,
+          options: [...q.options],
+          correctOption: q.correctOption,
+          topic: q.topic,
+          difficulty: q.difficulty,
+          explanation: q.explanation || '',
+        });
+      })
+      .catch((err) => active && setLoadError(apiError(err).message))
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [id, isEdit, user?.id]);
 
   const setField = (field, value) => setForm((f) => ({ ...f, [field]: value }));
   const setOption = (i, value) =>
@@ -65,8 +101,14 @@ export default function AddQuestionPage() {
 
     setSaving(true);
     try {
-      await createQuestion({ ...form, explanation: form.explanation.trim() || undefined });
-      navigate('/questions', { state: { message: 'Question saved.' } });
+      const data = { ...form, explanation: form.explanation.trim() };
+      if (isEdit) {
+        await updateQuestion(id, data);
+        navigate('/questions', { state: { message: 'Question updated.' } });
+      } else {
+        await createQuestion({ ...data, explanation: data.explanation || undefined });
+        navigate('/questions', { state: { message: 'Question saved.' } });
+      }
     } catch (err) {
       const { field, message } = apiError(err);
       if (field) setErrors({ [field]: message });
@@ -76,6 +118,16 @@ export default function AddQuestionPage() {
     }
   }
 
+  if (loading) return <p className="muted">Loading…</p>;
+  if (loadError) {
+    return (
+      <section>
+        <p className="alert" role="alert">{loadError}</p>
+        <p><Link to="/questions">← Back to Question Bank</Link></p>
+      </section>
+    );
+  }
+
   const counter = (value, max) => (
     <span className="muted small">{value.length}/{max}</span>
   );
@@ -83,7 +135,7 @@ export default function AddQuestionPage() {
   return (
     <section className="narrow-wide">
       <p><Link to="/questions">← Back to Question Bank</Link></p>
-      <h1>Add question</h1>
+      <h1>{isEdit ? 'Edit question' : 'Add question'}</h1>
       {formError && <p className="alert" role="alert">{formError}</p>}
 
       <form onSubmit={handleSubmit} noValidate>
@@ -159,7 +211,7 @@ export default function AddQuestionPage() {
         />
         <FieldError message={errors.explanation} />
 
-        <button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save question'}</button>
+        <button type="submit" disabled={saving}>{saving ? 'Saving…' : isEdit ? 'Save changes' : 'Save question'}</button>
       </form>
     </section>
   );

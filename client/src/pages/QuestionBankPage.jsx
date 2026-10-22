@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { apiError } from '../api/client';
-import { listTopics, searchQuestions } from '../api/questions';
+import { deleteQuestion, listTopics, searchQuestions } from '../api/questions';
 import { useAuth } from '../context/AuthContext';
 
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
@@ -11,11 +11,11 @@ const PAGE_SIZE = 20;
  * Question Bank (Faculty only).
  * #13 – "Add question" button and success message.
  * #14 – keyword search, topic and difficulty filters, results list (REQ-QB-04).
+ * #15 – the owner can edit or remove their own questions; removal asks for confirmation (REQ-QB-06).
  */
 export default function QuestionBankPage() {
   const location = useLocation();
   const { user } = useAuth();
-  const savedMessage = location.state?.message;
 
   const [keyword, setKeyword] = useState('');
   const [filters, setFilters] = useState({ q: '', topic: '', difficulty: '' });
@@ -24,6 +24,9 @@ export default function QuestionBankPage() {
   const [result, setResult] = useState({ questions: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState(location.state?.message || '');
+  const [confirmId, setConfirmId] = useState(null);
+  const [removing, setRemoving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,6 +64,23 @@ export default function QuestionBankPage() {
     setFilters({ q: '', topic: '', difficulty: '' });
   }
 
+  async function confirmRemove(id) {
+    setRemoving(true);
+    setError('');
+    try {
+      await deleteQuestion(id);
+      setConfirmId(null);
+      setNotice('Question removed.');
+      await load();
+      listTopics().then(setTopics).catch(() => {});
+    } catch (err) {
+      setConfirmId(null);
+      setError(apiError(err).message);
+    } finally {
+      setRemoving(false);
+    }
+  }
+
   const totalPages = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
   const hasFilters = filters.q || filters.topic || filters.difficulty;
   const ownerLabel = (owner) => (owner.id === user?.id ? 'You' : owner.name || 'Another Faculty member');
@@ -71,7 +91,7 @@ export default function QuestionBankPage() {
         <h1>Question Bank</h1>
         <Link className="button" to="/questions/new">Add question</Link>
       </div>
-      {savedMessage && <p className="success" role="status">{savedMessage}</p>}
+      {notice && <p className="success" role="status">{notice}</p>}
 
       <form className="search-bar" onSubmit={handleSearch} role="search">
         <label htmlFor="q" className="visually-hidden">Keyword</label>
@@ -129,6 +149,7 @@ export default function QuestionBankPage() {
                   <th scope="col">Topic</th>
                   <th scope="col">Difficulty</th>
                   <th scope="col">Owner</th>
+                  <th scope="col"><span className="visually-hidden">Actions</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -138,6 +159,27 @@ export default function QuestionBankPage() {
                     <td>{q.topic}</td>
                     <td><span className={`badge badge-${q.difficulty.toLowerCase()}`}>{q.difficulty}</span></td>
                     <td>{ownerLabel(q.owner)}</td>
+                    <td className="actions">
+                      {q.owner.id === user?.id &&
+                        (confirmId === q.id ? (
+                          <span className="confirm" role="group" aria-label="Confirm removal">
+                            Remove this question?
+                            <button type="button" className="danger" disabled={removing} onClick={() => confirmRemove(q.id)}>
+                              {removing ? 'Removing…' : 'Remove'}
+                            </button>
+                            <button type="button" className="secondary" disabled={removing} onClick={() => setConfirmId(null)}>
+                              Cancel
+                            </button>
+                          </span>
+                        ) : (
+                          <>
+                            <Link to={`/questions/${q.id}/edit`}>Edit</Link>
+                            <button type="button" className="link-button danger-link" onClick={() => setConfirmId(q.id)}>
+                              Remove
+                            </button>
+                          </>
+                        ))}
+                    </td>
                   </tr>
                 ))}
               </tbody>
