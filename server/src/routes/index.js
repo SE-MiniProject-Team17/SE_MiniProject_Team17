@@ -11,9 +11,6 @@ router.use('/auth', require('./authRoutes'));
 // Question Bank (#13-#15)
 router.use('/questions', require('./questionRoutes'));
 
-// User profile (#6)
-router.use('/account', require('./accountRoutes'));
-
 // Quizzes – authoring (#16); quiz taking (#17-#19) adds its routes to quizRoutes too
 router.use('/quizzes', require('./quizRoutes'));
 
