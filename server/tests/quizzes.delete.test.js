@@ -1,25 +1,15 @@
 /**
  * #42 – quiz deletion and the "attempt started" rule (SRS REQ-QZ-05, STP TC-QZ-05)
- * The Attempt model belongs to the attempts module (#18/#19). Until it is merged, these tests
- * register a minimal stand-in with the same name and the same `quiz` field.
+ * Uses the real Attempt model from the attempts module (#19).
  */
 const mongoose = require('mongoose');
 const request = require('supertest');
 const app = require('../src/app');
 const { Quiz } = require('../src/models/Quiz');
 const { Question } = require('../src/models/Question');
+const Attempt = require('../src/models/Attempt');
 const { startDB, clearDB, stopDB } = require('./helpers/db');
 const { tokenFor } = require('./helpers/auth');
-
-const Attempt =
-  mongoose.models.Attempt ||
-  mongoose.model(
-    'Attempt',
-    new mongoose.Schema({
-      student: { type: mongoose.Schema.Types.ObjectId, required: true },
-      quiz: { type: mongoose.Schema.Types.ObjectId, required: true },
-    })
-  );
 
 const OWNER_ID = new mongoose.Types.ObjectId().toString();
 const HOUR = 60 * 60 * 1000;
@@ -99,7 +89,14 @@ describe('REQ-QZ-05 – deletion and editing are refused once an attempt has sta
   beforeEach(async () => {
     id = await createQuiz();
     await publish(id);
-    await Attempt.create({ student: new mongoose.Types.ObjectId(), quiz: id });
+    await Attempt.create({
+      student: new mongoose.Types.ObjectId(),
+      quiz: id,
+      answers: [],
+      score: 0,
+      totalQuestions: 2,
+      percentage: 0,
+    });
   });
 
   test('delete is refused with 409 QUIZ_HAS_ATTEMPTS and the quiz is unchanged', async () => {
