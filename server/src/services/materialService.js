@@ -1,4 +1,4 @@
-﻿const fs = require('fs/promises');
+const fs = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
 const { randomUUID } = require('crypto');
@@ -22,9 +22,7 @@ function checksum(buffer) {
 }
 
 async function validateOfficeFile(file) {
-  if (file.mimetype !== DOCX_TYPE && file.mimetype !== PPTX_TYPE) {
-    return;
-  }
+  if (file.mimetype !== DOCX_TYPE && file.mimetype !== PPTX_TYPE) return;
 
   const requiredEntry =
     file.mimetype === DOCX_TYPE ? 'word/document.xml' : 'ppt/presentation.xml';
@@ -44,13 +42,11 @@ async function validateOfficeFile(file) {
     yauzl.fromBuffer(file.buffer, { lazyEntries: true }, (err, openedZip) => {
       if (err || !openedZip) return fail();
       zipfile = openedZip;
-
       zipfile.on('error', fail);
       zipfile.on('entry', (entry) => {
         entries.add(entry.fileName);
         zipfile.readEntry();
       });
-
       zipfile.on('end', () => {
         if (settled) return;
         if (entries.has('[Content_Types].xml') && entries.has(requiredEntry)) {
@@ -60,11 +56,11 @@ async function validateOfficeFile(file) {
           fail();
         }
       });
-
       zipfile.readEntry();
     });
   });
 }
+
 async function createMaterial(data, file, userId) {
   if (!file || !Buffer.isBuffer(file.buffer) || file.size === 0) {
     throw AppError.validation('file', 'A non-empty file is required');
@@ -122,9 +118,48 @@ async function listMyMaterials(userId) {
     .lean();
 }
 
+async function getMaterialForUser(id, userId) {
+  const material = await Material.findById(id);
+
+  if (!material) throw AppError.unavailable('Material');
+
+  if (material.uploadedBy.toString() !== userId.toString()) {
+    throw AppError.accessDenied();
+  }
+
+  return material;
+}
+
+async function readVerifiedMaterialFile(material) {
+  const storageRoot = path.resolve(STORAGE_DIR);
+  const filePath = path.resolve(material.storagePath);
+
+  if (!filePath.startsWith(`${storageRoot}${path.sep}`)) {
+    throw AppError.unavailable('Material');
+  }
+
+  let buffer;
+  try {
+    buffer = await fs.readFile(filePath);
+  } catch (error) {
+    if (error.code === 'ENOENT' || error.code === 'ENOTDIR') {
+      throw AppError.unavailable('Material');
+    }
+    throw error;
+  }
+
+  if (checksum(buffer) !== material.checksum || buffer.length !== material.size) {
+    throw AppError.unavailable('Material');
+  }
+
+  return buffer;
+}
+
 module.exports = {
   createMaterial,
   listMyMaterials,
+  getMaterialForUser,
+  readVerifiedMaterialFile,
   checksum,
   STORAGE_DIR,
 };
