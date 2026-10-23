@@ -48,4 +48,14 @@ async function publish(req, res, next) {
   }
 }
 
-module.exports = { create, listMine, getOne, update, publish };
+/** #42 – DELETE /api/quizzes/:id -> 204 (owner; 409 QUIZ_HAS_ATTEMPTS once an attempt has started) */
+async function remove(req, res, next) {
+  try {
+    await quizService.deleteQuiz(req.quiz);
+    return res.status(204).end();
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { create, listMine, getOne, update, publish, remove };

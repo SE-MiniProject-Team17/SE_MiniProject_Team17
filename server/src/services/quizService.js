@@ -52,6 +52,27 @@ async function getOwnQuiz(id, userId) {
   return quiz;
 }
 
+/**
+ * #42 – has any Student started an attempt on this quiz? (SRS REQ-QZ-05)
+ * The Attempt model belongs to the attempts module (#18/#19). It is looked up lazily so the quiz
+ * module works before and after that module is merged; no model means no attempts yet.
+ */
+function attemptModel() {
+  if (mongoose.models.Attempt) return mongoose.models.Attempt;
+  try {
+    // eslint-disable-next-line global-require
+    return require('../models/Attempt');
+  } catch (err) {
+    if (err.code === 'MODULE_NOT_FOUND') return null;
+    throw err;
+  }
+}
+
+async function hasAttempts(quizId) {
+  const Attempt = attemptModel();
+  return Attempt ? Boolean(await Attempt.exists({ quiz: quizId })) : false;
+}
+
 /** REQ-QZ-05: only a Draft can be edited (or published). */
 function assertDraft(quiz, action = 'edited') {
   if (quiz.status !== STATUS.DRAFT) {
@@ -114,6 +135,17 @@ async function publishQuiz(quiz) {
   quiz.publishedAt = new Date();
   await quiz.save();
   return quiz;
+}
+
+/**
+ * #42 – REQ-QZ-05: the owner deletes a quiz (the confirmation prompt is in the client).
+ * Refused with 409 QUIZ_HAS_ATTEMPTS once any Student has started an attempt; nothing is changed then.
+ */
+async function deleteQuiz(quiz) {
+  if (await hasAttempts(quiz._id)) {
+    throw AppError.conflict('QUIZ_HAS_ATTEMPTS', 'This quiz cannot be deleted because a Student has started an attempt');
+  }
+  await Quiz.deleteOne({ _id: quiz._id });
 }
 
 /** #16 – the owner's own quizzes, newest first, for the Faculty "My quizzes" list. */
@@ -180,6 +212,8 @@ module.exports = {
   mergeEdits,
   updateQuiz,
   publishQuiz,
+  deleteQuiz,
+  hasAttempts,
   listOwnQuizzes,
   toOwnerView,
 };

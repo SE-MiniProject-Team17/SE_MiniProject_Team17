@@ -33,4 +33,7 @@ router.get('/:id', faculty, loadOwnQuiz, controller.getOne);
 router.put('/:id', faculty, loadOwnQuiz, prepareQuizEdit, quizRules, validate, controller.update);
 router.post('/:id/publish', faculty, loadOwnQuiz, controller.publish);
 
+// #42 – deletion (REQ-QZ-05)
+router.delete('/:id', faculty, loadOwnQuiz, controller.remove);
+
 module.exports = router;
