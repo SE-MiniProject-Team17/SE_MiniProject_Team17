@@ -99,7 +99,13 @@ describe('REQ-QZ-05 – deletion and editing are refused once an attempt has sta
   beforeEach(async () => {
     id = await createQuiz();
     await publish(id);
-    await Attempt.create({ student: new mongoose.Types.ObjectId(), quiz: id });
+    await Attempt.create({
+      student: new mongoose.Types.ObjectId(),
+      quiz: id,
+      score: 1,
+      totalQuestions: 2,
+      percentage: 50,
+    });
   });
 
   test('delete is refused with 409 QUIZ_HAS_ATTEMPTS and the quiz is unchanged', async () => {

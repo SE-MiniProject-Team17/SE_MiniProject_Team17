@@ -27,6 +27,13 @@ router.get(
   attemptController.result
 );
 
+router.get(
+  '/history',
+  authenticate,
+  requireRole(ROLES.STUDENT),
+  attemptController.history
+);
+
 router.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });

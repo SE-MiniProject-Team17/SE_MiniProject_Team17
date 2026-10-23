@@ -1,6 +1,7 @@
 const {
   submitAttempt,
   getAttemptResult,
+  getStudentAttemptHistory,
 } = require('../services/attemptService');
 
 async function submit(req, res, next) {
@@ -30,4 +31,13 @@ async function result(req, res, next) {
   }
 }
 
-module.exports = { submit, result };
+async function history(req, res, next) {
+  try {
+    const attempts = await getStudentAttemptHistory(req.user.id);
+    return res.status(200).json(attempts);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { submit, result, history };

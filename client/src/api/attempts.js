@@ -1,4 +1,3 @@
-
 import api from './client';
 
 export async function submitAttempt(quizId, answers) {
@@ -10,5 +9,10 @@ export async function submitAttempt(quizId, answers) {
 
 export async function getAttemptResult(attemptId) {
   const { data } = await api.get(`/attempts/${attemptId}/result`);
+  return data;
+}
+
+export async function getAttemptHistory() {
+  const { data } = await api.get('/attempts/history');
   return data;
 }

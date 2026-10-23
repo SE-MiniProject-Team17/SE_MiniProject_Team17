@@ -361,3 +361,54 @@ describe('Automatic grading and detailed results', () => {
     expect(elapsedMs).toBeLessThan(2000);
   });
 });
+describe('Student attempt history', () => {
+  test('returns submitted attempts with quiz and score details', async () => {
+    await submit({
+      answers: [
+        { questionId: String(questions[0]._id), selectedOption: 'B' },
+        { questionId: String(questions[1]._id), selectedOption: 'C' },
+        { questionId: String(questions[2]._id), selectedOption: 'D' },
+      ],
+    });
+
+    const res = await request(app)
+      .get(`${URL}/history`)
+      .set('Authorization', `Bearer ${student.token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0]).toMatchObject({
+      quizTitle: 'Test Quiz',
+      score: 3,
+      totalQuestions: 3,
+      percentage: 100,
+    });
+    expect(res.body[0].id).toBeDefined();
+    expect(res.body[0].submittedAt).toBeDefined();
+  });
+
+  test('does not show another student’s attempts', async () => {
+    await submit({
+      answers: [
+        { questionId: String(questions[0]._id), selectedOption: 'B' },
+        { questionId: String(questions[1]._id), selectedOption: 'C' },
+        { questionId: String(questions[2]._id), selectedOption: 'D' },
+      ],
+    });
+
+    const res = await request(app)
+      .get(`${URL}/history`)
+      .set('Authorization', `Bearer ${otherStudent.token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
+
+  test('denies faculty access to student attempt history', async () => {
+    const res = await request(app)
+      .get(`${URL}/history`)
+      .set('Authorization', `Bearer ${faculty.token}`);
+
+    expect(res.status).toBe(403);
+  });
+});

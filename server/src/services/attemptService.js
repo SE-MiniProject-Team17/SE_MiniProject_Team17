@@ -139,4 +139,21 @@ function formatAttempt(attempt) {
   };
 }
 
-module.exports = { submitAttempt, getAttemptResult };
+async function getStudentAttemptHistory(studentId) {
+  const attempts = await Attempt.find({ student: studentId })
+    .populate('quiz', 'title')
+    .sort({ submittedAt: -1 })
+    .lean();
+
+  return attempts.map((attempt) => ({
+    id: String(attempt._id),
+    quizId: String(attempt.quiz?._id || attempt.quiz),
+    quizTitle: attempt.quiz?.title || 'Quiz unavailable',
+    score: attempt.score,
+    totalQuestions: attempt.totalQuestions,
+    percentage: attempt.percentage,
+    submittedAt: attempt.submittedAt,
+  }));
+}
+
+module.exports = { submitAttempt, getAttemptResult, getStudentAttemptHistory };

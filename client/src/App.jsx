@@ -16,6 +16,7 @@ import QuizAttemptPage from './pages/QuizAttemptPage';
 import { useAuth } from './context/AuthContext';
 import QuizFormPage from './pages/QuizFormPage';
 import AttemptResultPage from './pages/AttemptResultPage';
+import AttemptHistoryPage from './pages/AttemptHistoryPage';
 
 function RoleQuizzesPage() {
   const { user } = useAuth();
@@ -66,6 +67,7 @@ export default function App() {
 
           <Route element={<ProtectedRoute roles={[ROLES.STUDENT]} />}>
             <Route path="/quizzes/:quizId/attempt" element={<QuizAttemptPage />} />
+            <Route path="/attempt-history" element={<AttemptHistoryPage />} />
           </Route>
 
           <Route element={<ProtectedRoute roles={[ROLES.FACULTY]} />}>

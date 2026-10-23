@@ -36,6 +36,7 @@ export default function QuizListPage() {
     <section>
       <div className="page-header">
         <h1>Available Quizzes</h1>
+          <Link to="/attempt-history">View Attempt History</Link>
       </div>
 
       {loading && <p>Loading quizzes...</p>}
