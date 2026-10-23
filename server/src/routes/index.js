@@ -33,4 +33,5 @@ router.use('/quizzes', require('./quizRoutes'));
 // Study Groups (Issue #25)
 router.use('/groups', require('./groupRoutes'));
 
+router.use('/materials', require('./materialRoutes'));
 module.exports = router;

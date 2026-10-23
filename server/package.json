@@ -34,7 +34,8 @@
     "helmet": "^7.2.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.11.1",
-    "multer": "^2.4.0"
+    "multer": "^2.4.0",
+    "yauzl": "^3.4.0"
   },
   "devDependencies": {
     "@types/multer": "^2.3.0",
