@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
  *            explanation, topic, difficulty) made at publication, so later edits or removal of bank
  *            questions do not change the published quiz or any attempt (REQ-QZ-04).
  *
- * Shared with the quiz-taking part (#17GÇô#19, VedhV): read `status`, `availableFrom`, `availableUntil`,
+ * Shared with the quiz-taking part (#17â€“#19, VedhV): read `status`, `availableFrom`, `availableUntil`,
  * `timeLimitMinutes` and the `questions` copies. Never send `correctOption`/`explanation` to Students
  * before they submit (SEC-QZ-02).
  */
