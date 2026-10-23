@@ -43,6 +43,11 @@ npm run dev                   # http://localhost:5050/api/health
 cd client
 npm install
 npm run dev                   # http://localhost:5173
+
+## Local development setup
+
+For full prerequisites, environment configuration, startup instructions,
+test commands, and troubleshooting, see [Local Development Setup](docs/LOCAL_SETUP.md).
 ```
 
 ## Tests
@@ -74,8 +79,8 @@ GitHub Actions runs the workflow defined in `.github/workflows/ci.yml`.
 
 For pull requests targeting `main`, CI runs these jobs independently:
 
-- **Server tests** — installs server dependencies with `npm ci` and runs `npm test`.
-- **Client build** — installs client dependencies with `npm ci` and runs `npm run build`.
+- **Server tests** ï¿½ installs server dependencies with `npm ci` and runs `npm test`.
+- **Client build** ï¿½ installs client dependencies with `npm ci` and runs `npm run build`.
 
 The workflow also runs when commits are pushed directly to `main`.
 
