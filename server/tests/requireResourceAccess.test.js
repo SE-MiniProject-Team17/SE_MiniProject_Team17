@@ -96,7 +96,7 @@ describe('requireResourceAccess middleware', () => {
     expect(response.body.error.code).toBe('ACCESS_DENIED');
   });
 
-
+  
   test('supports a Mongoose-style owner object', async () => {
     const response = await request(
       createApp({
