@@ -165,4 +165,24 @@ describe('Material upload and validation', () => {
     expect(res.body.error.field).toBe('file');
     expect(await Material.countDocuments()).toBe(0);
   });
+
+  test('rejects files larger than 25 MiB', async () => {
+    const oversized = Buffer.alloc(25 * 1024 * 1024 + 1, 65);
+    oversized.write('%PDF-1.7', 0, 'ascii');
+
+    const res = await request(app)
+      .post(URL)
+      .set('Authorization', `Bearer ${student.token}`)
+      .field('title', validMetadata().title)
+      .field('subject', validMetadata().subject)
+      .field('description', validMetadata().description)
+      .attach('file', oversized, {
+        filename: 'large.pdf',
+        contentType: 'application/pdf',
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.field).toBe('file');
+    expect(await Material.countDocuments()).toBe(0);
+  });
 });

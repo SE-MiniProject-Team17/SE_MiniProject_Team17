@@ -21,17 +21,18 @@ function checksum(buffer) {
   return crypto.createHash('sha256').update(buffer).digest('hex');
 }
 
-function validateOfficeFile(file) {
+async function validateOfficeFile(file) {
   if (file.mimetype !== DOCX_TYPE && file.mimetype !== PPTX_TYPE) {
-    return Promise.resolve();
+    return;
   }
 
   const requiredEntry =
     file.mimetype === DOCX_TYPE ? 'word/document.xml' : 'ppt/presentation.xml';
 
-  return new Promise((resolve, reject) => {
-    let settled = false;
+  await new Promise((resolve, reject) => {
     let zipfile;
+    let settled = false;
+    const entries = new Set();
 
     const fail = () => {
       if (settled) return;
@@ -45,15 +46,6 @@ function validateOfficeFile(file) {
       zipfile = openedZip;
 
       zipfile.on('error', fail);
-      zipfile.on('entry', (entry) => {
-        if (entry.fileName === '[Content_Types].xml' || entry.fileName === requiredEntry) {
-          // Keep scanning until the archive has been checked.
-        }
-        zipfile.readEntry();
-      });
-
-      const entries = new Set();
-      zipfile.removeAllListeners('entry');
       zipfile.on('entry', (entry) => {
         entries.add(entry.fileName);
         zipfile.readEntry();
@@ -73,7 +65,6 @@ function validateOfficeFile(file) {
     });
   });
 }
-
 async function createMaterial(data, file, userId) {
   if (!file || !Buffer.isBuffer(file.buffer) || file.size === 0) {
     throw AppError.validation('file', 'A non-empty file is required');
