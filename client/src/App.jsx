@@ -8,6 +8,7 @@ import HelpPage from './pages/HelpPage';
 import ForbiddenPage from './pages/ForbiddenPage';
 import NotFoundPage from './pages/NotFoundPage';
 import PlaceholderPage from './pages/PlaceholderPage';
+import MaterialsPage from './pages/MaterialsPage';
 import QuestionBankPage from './pages/QuestionBankPage';
 import QuestionFormPage from './pages/QuestionFormPage';
 import QuizzesPage from './pages/QuizzesPage';
@@ -32,15 +33,15 @@ export default function App() {
           {/* Any logged-in user */}
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<PlaceholderPage title="My Profile" issues="#6" />} />
-            <Route path="/groups/*" element={<PlaceholderPage title="Study Groups" issues="#25–#27" />} />
+            <Route path="/groups/*" element={<PlaceholderPage title="Study Groups" issues="#25â€“#27" />} />
           </Route>
 
           {/* Students and Faculty */}
           <Route element={<ProtectedRoute roles={[ROLES.STUDENT, ROLES.FACULTY]} />}>
-            <Route path="/materials/*" element={<PlaceholderPage title="Study Materials" issues="#7–#12" />} />
+            <Route path="/materials/*" element={<MaterialsPage />} />
             <Route path="/quizzes" element={<QuizzesPage />} />
-            <Route path="/quizzes/*" element={<PlaceholderPage title="Quizzes" issues="#17–#19" />} />
-            <Route path="/performance/*" element={<PlaceholderPage title="Performance" issues="#22–#24" />} />
+            <Route path="/quizzes/*" element={<PlaceholderPage title="Quizzes" issues="#17â€“#19" />} />
+            <Route path="/performance/*" element={<PlaceholderPage title="Performance" issues="#22â€“#24" />} />
           </Route>
 
           {/* Faculty only */}
@@ -57,7 +58,7 @@ export default function App() {
       </main>
       <footer className="site-footer">
         <div>
-          <span>Study &amp; Quiz · Team 17 SE Mini Project</span>
+          <span>Study &amp; Quiz Â· Team 17 SE Mini Project</span>
           <span>Need help? See the Help page.</span>
         </div>
       </footer>
