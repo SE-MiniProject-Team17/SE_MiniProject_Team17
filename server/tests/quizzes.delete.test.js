@@ -1,7 +1,8 @@
 /**
  * #42 – quiz deletion and the "attempt started" rule (SRS REQ-QZ-05, STP TC-QZ-05)
  * The Attempt model belongs to the attempts module (#18/#19). Until it is merged, these tests
- * register a minimal stand-in with the same name and the same `quiz` field.
+ * register a minimal stand-in with the same name and the same `quiz` field. Once the real model is
+ * in main it is used instead, so the attempt below carries every field that model requires.
  */
 const mongoose = require('mongoose');
 const request = require('supertest');
@@ -99,7 +100,15 @@ describe('REQ-QZ-05 – deletion and editing are refused once an attempt has sta
   beforeEach(async () => {
     id = await createQuiz();
     await publish(id);
-    await Attempt.create({ student: new mongoose.Types.ObjectId(), quiz: id });
+    // All fields the real Attempt model (#19) requires; the stand-in simply ignores the extra ones.
+    await Attempt.create({
+      student: new mongoose.Types.ObjectId(),
+      quiz: id,
+      answers: [],
+      score: 0,
+      totalQuestions: 2,
+      percentage: 0,
+    });
   });
 
   test('delete is refused with 409 QUIZ_HAS_ATTEMPTS and the quiz is unchanged', async () => {
