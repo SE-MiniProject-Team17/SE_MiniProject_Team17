@@ -111,4 +111,50 @@ async function download(req, res, next) {
   }
 }
 
-module.exports = { upload, getMine, getShared, getById, download };
+
+async function update(req, res, next) {
+  try {
+    const material = await materialService.updateMaterial(
+      req.params.id,
+      req.user.id,
+      req.body || {}
+    );
+
+    return res.status(200).json({
+      id: material._id.toString(),
+      title: material.title,
+      subject: material.subject,
+      description: material.description,
+      uploadedBy: material.uploadedBy.toString(),
+      createdAt: material.createdAt,
+      updatedAt: material.updatedAt,
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function remove(req, res, next) {
+  try {
+    const result = await materialService.deleteMaterial(
+      req.params.id,
+      req.user.id
+    );
+
+    return res.status(200).json({
+      message: 'Material deleted successfully',
+      ...result,
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
+module.exports = {
+  upload,
+  getMine,
+  getShared,
+  getById,
+  download,
+  update,
+  remove,
+};

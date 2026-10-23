@@ -162,6 +162,46 @@ async function getMaterialForUser(id, userId) {
   return material;
 }
 
+
+async function getOwnedMaterial(id, userId) {
+  const material = await Material.findById(id);
+  if (!material) throw AppError.unavailable('Material');
+  if (material.uploadedBy.toString() !== userId.toString()) {
+    throw AppError.accessDenied();
+  }
+  return material;
+}
+
+async function updateMaterial(id, userId, data) {
+  const material = await getOwnedMaterial(id, userId);
+  const metadata = validateMaterialMetadata({
+    title: data.title ?? material.title,
+    subject: data.subject ?? material.subject,
+    description: data.description ?? material.description,
+  });
+  Object.assign(material, metadata);
+  await material.save();
+  return material;
+}
+
+async function deleteMaterial(id, userId) {
+  const material = await getOwnedMaterial(id, userId);
+  const filePath = path.resolve(material.storagePath);
+  const storageRoot = path.resolve(STORAGE_DIR);
+
+  await MaterialShare.deleteMany({ material: material._id });
+  await Material.deleteOne({ _id: material._id });
+
+  if (filePath.startsWith(`${storageRoot}${path.sep}`)) {
+    await fs.unlink(filePath).catch((error) => {
+      if (error.code !== 'ENOENT') throw error;
+    });
+  }
+
+  return { id: material._id.toString() };
+}
+
+
 async function readVerifiedMaterialFile(material) {
   const storageRoot = path.resolve(STORAGE_DIR);
   const filePath = path.resolve(material.storagePath);
@@ -192,6 +232,8 @@ module.exports = {
   listMyMaterials,
   listSharedMaterials,
   getMaterialForUser,
+  updateMaterial,
+  deleteMaterial,
   readVerifiedMaterialFile,
   checksum,
   STORAGE_DIR,
