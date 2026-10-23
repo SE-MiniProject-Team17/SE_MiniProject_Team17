@@ -9,6 +9,8 @@ process.env.MATERIAL_STORAGE_DIR = STORAGE_DIR;
 
 const app = require('../src/app');
 const Material = require('../src/models/Material');
+const User = require('../src/models/User');
+const MaterialShare = require('../src/models/MaterialShare');
 const { startDB, clearDB, stopDB } = require('./helpers/db');
 const { tokenFor } = require('./helpers/auth');
 
@@ -17,6 +19,16 @@ const pdfBuffer = Buffer.from('%PDF-1.7\nDownload test content\n%%EOF');
 
 let owner;
 let otherUser;
+
+async function createRegisteredUser(user, label) {
+  await User.create({
+    _id: user.id,
+    fullName: label,
+    email: `${label.toLowerCase()}-${user.id}@example.com`,
+    passwordHash: 'test-password-hash',
+    role: 'Student',
+  });
+}
 
 async function uploadMaterial(user) {
   return request(app)
@@ -152,5 +164,78 @@ describe('Material download integrity', () => {
 
     expect(response.status).toBe(404);
     expect(response.body.error.message).toBe('Material unavailable');
+  });
+});
+
+
+describe('Shared material viewing and downloading', () => {
+  test('recipient can view and download a shared material', async () => {
+    const uploaded = await uploadMaterial(owner);
+    expect(uploaded.status).toBe(201);
+
+    await createRegisteredUser(owner, 'Owner');
+    await createRegisteredUser(otherUser, 'Recipient');
+
+    const shareResponse = await request(app)
+      .post(`${URL}/${uploaded.body.id}/share`)
+      .set('Authorization', `Bearer ${owner.token}`)
+      .send({ email: `recipient-${otherUser.id}@example.com` });
+
+    expect(shareResponse.status).toBe(201);
+
+    const details = await request(app)
+      .get(`${URL}/${uploaded.body.id}`)
+      .set('Authorization', `Bearer ${otherUser.token}`);
+
+    const download = await request(app)
+      .get(`${URL}/${uploaded.body.id}/download`)
+      .set('Authorization', `Bearer ${otherUser.token}`);
+
+    expect(details.status).toBe(200);
+    expect(details.body.id).toBe(uploaded.body.id);
+    expect(details.body.storagePath).toBeUndefined();
+    expect(download.status).toBe(200);
+    expect(download.headers['content-type']).toContain('application/pdf');
+    expect(Buffer.from(download.body)).toEqual(pdfBuffer);
+  });
+
+  test('revoked recipient loses view and download access immediately', async () => {
+    const uploaded = await uploadMaterial(owner);
+    expect(uploaded.status).toBe(201);
+
+    await createRegisteredUser(owner, 'Owner');
+    await createRegisteredUser(otherUser, 'Recipient');
+
+    const shareResponse = await request(app)
+      .post(`${URL}/${uploaded.body.id}/share`)
+      .set('Authorization', `Bearer ${owner.token}`)
+      .send({ email: `recipient-${otherUser.id}@example.com` });
+
+    expect(shareResponse.status).toBe(201);
+
+    const revokeResponse = await request(app)
+      .delete(`${URL}/${uploaded.body.id}/share/${otherUser.id}`)
+      .set('Authorization', `Bearer ${owner.token}`);
+
+    expect(revokeResponse.status).toBe(200);
+
+    const details = await request(app)
+      .get(`${URL}/${uploaded.body.id}`)
+      .set('Authorization', `Bearer ${otherUser.token}`);
+
+    const download = await request(app)
+      .get(`${URL}/${uploaded.body.id}/download`)
+      .set('Authorization', `Bearer ${otherUser.token}`);
+
+    expect(details.status).toBe(403);
+    expect(details.body.error.message).toBe('Access denied');
+    expect(download.status).toBe(403);
+    expect(download.body.error.message).toBe('Access denied');
+
+    const ownerDetails = await request(app)
+      .get(`${URL}/${uploaded.body.id}`)
+      .set('Authorization', `Bearer ${owner.token}`);
+
+    expect(ownerDetails.status).toBe(200);
   });
 });

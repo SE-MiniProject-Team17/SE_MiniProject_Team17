@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const { randomUUID } = require('crypto');
 const yauzl = require('yauzl');
 const Material = require('../models/Material');
+const MaterialShare = require('../models/MaterialShare');
 const AppError = require('../utils/AppError');
 const { validateFileSignature } = require('../middleware/materialUpload');
 const { validateMaterialMetadata } = require('../validators/materialValidators');
@@ -123,8 +124,18 @@ async function getMaterialForUser(id, userId) {
 
   if (!material) throw AppError.unavailable('Material');
 
-  if (material.uploadedBy.toString() !== userId.toString()) {
-    throw AppError.accessDenied();
+  const isOwner =
+    material.uploadedBy.toString() === userId.toString();
+
+  if (!isOwner) {
+    const activeShare = await MaterialShare.findOne({
+      material: material._id,
+      owner: material.uploadedBy,
+      recipient: userId,
+      revokedAt: null,
+    });
+
+    if (!activeShare) throw AppError.accessDenied();
   }
 
   return material;
