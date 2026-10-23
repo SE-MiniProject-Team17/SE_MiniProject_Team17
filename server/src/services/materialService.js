@@ -119,6 +119,27 @@ async function listMyMaterials(userId) {
     .lean();
 }
 
+
+async function listSharedMaterials(userId) {
+  const shares = await MaterialShare.find({
+    recipient: userId,
+    revokedAt: null,
+  })
+    .sort({ createdAt: -1 })
+    .populate({
+      path: 'material',
+      select: 'title subject description originalName mimeType size uploadedBy createdAt',
+    })
+    .lean();
+
+  return shares
+    .filter((share) => share.material)
+    .map((share) => ({
+      shareId: share._id.toString(),
+      ...share.material,
+      id: share.material._id.toString(),
+    }));
+}
 async function getMaterialForUser(id, userId) {
   const material = await Material.findById(id);
 
@@ -169,6 +190,7 @@ async function readVerifiedMaterialFile(material) {
 module.exports = {
   createMaterial,
   listMyMaterials,
+  listSharedMaterials,
   getMaterialForUser,
   readVerifiedMaterialFile,
   checksum,

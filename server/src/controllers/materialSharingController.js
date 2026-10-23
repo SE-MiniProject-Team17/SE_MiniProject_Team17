@@ -36,4 +36,13 @@ async function revokeShare(req, res, next) {
   }
 }
 
-module.exports = { share, revokeShare };
+async function getShared(req, res, next) {
+  try {
+    const materials = await materialSharingService.listSharedMaterials(req.user.id);
+    return res.status(200).json({ materials });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { share, revokeShare, getShared };

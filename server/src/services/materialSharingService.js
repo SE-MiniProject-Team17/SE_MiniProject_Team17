@@ -91,4 +91,25 @@ async function revokeMaterialShare(materialId, ownerId, recipientId) {
   return { revoked: true };
 }
 
-module.exports = { shareMaterial, revokeMaterialShare };
+async function listSharedMaterials(userId) {
+  const shares = await MaterialShare.find({
+    recipient: userId,
+    revokedAt: null,
+  }).populate('material');
+
+  return shares
+    .filter((share) => share.material)
+    .map((share) => ({
+      id: share.material._id.toString(),
+      title: share.material.title,
+      subject: share.material.subject,
+      description: share.material.description,
+      originalName: share.material.originalName,
+      mimeType: share.material.mimeType,
+      size: share.material.size,
+      uploadedBy: share.material.uploadedBy.toString(),
+      createdAt: share.material.createdAt,
+    }));
+}
+
+module.exports = { shareMaterial, revokeMaterialShare, listSharedMaterials };

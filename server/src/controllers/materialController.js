@@ -48,6 +48,28 @@ async function getMine(req, res, next) {
   }
 }
 
+
+async function getShared(req, res, next) {
+  try {
+    const materials = await materialService.listSharedMaterials(req.user.id);
+    return res.status(200).json({
+      materials: materials.map((material) => ({
+        shareId: material.shareId,
+        id: material.id,
+        title: material.title,
+        subject: material.subject,
+        description: material.description,
+        originalName: material.originalName,
+        mimeType: material.mimeType,
+        size: material.size,
+        uploadedBy: material.uploadedBy.toString(),
+        createdAt: material.createdAt,
+      })),
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
 async function getById(req, res, next) {
   try {
     const material = await materialService.getMaterialForUser(
@@ -89,4 +111,4 @@ async function download(req, res, next) {
   }
 }
 
-module.exports = { upload, getMine, getById, download };
+module.exports = { upload, getMine, getShared, getById, download };
