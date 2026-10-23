@@ -79,6 +79,13 @@ describe('Material editing and removal', () => {
     const uploaded = await uploadMaterial(owner);
     expect(uploaded.status).toBe(201);
 
+    await MaterialShare.create({
+      material: uploaded.body.id,
+      owner: owner.id,
+      recipient: otherUser.id,
+      revokedAt: null,
+    });
+
     const edit = await request(app)
       .patch(`${URL}/${uploaded.body.id}`)
       .set('Authorization', `Bearer ${otherUser.token}`)
@@ -89,8 +96,22 @@ describe('Material editing and removal', () => {
       .set('Authorization', `Bearer ${otherUser.token}`);
 
     expect(edit.status).toBe(403);
+    expect(edit.body.error.message).toBe('Access denied');
     expect(remove.status).toBe(403);
-    expect(await Material.findById(uploaded.body.id)).not.toBeNull();
+    expect(remove.body.error.message).toBe('Access denied');
+    const saved = await Material.findById(uploaded.body.id);
+
+    expect(saved).not.toBeNull();
+    expect(saved.title).toBe('Original title');
+    expect(saved.subject).toBe('Original subject');
+    expect(saved.description).toBe('Original description');
+
+    const share = await MaterialShare.findOne({
+      material: uploaded.body.id,
+      recipient: otherUser.id,
+    });
+    expect(share).not.toBeNull();
+    expect(share.revokedAt).toBeNull();
   });
 
   test('owner can delete material and its stored file', async () => {
