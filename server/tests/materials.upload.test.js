@@ -72,6 +72,62 @@ describe('Material upload and validation', () => {
     expect(await fs.readFile(saved.storagePath)).toEqual(pdfBuffer);
   });
 
+  test('uploads a PNG', async () => {
+    const pngBuffer = Buffer.from([
+      137, 80, 78, 71, 13, 10, 26, 10,
+      0, 0, 0, 0,
+    ]);
+
+    const res = await request(app)
+      .post(URL)
+      .set('Authorization', `Bearer ${student.token}`)
+      .field('title', validMetadata().title)
+      .field('subject', validMetadata().subject)
+      .field('description', validMetadata().description)
+      .attach('file', pngBuffer, {
+        filename: 'notes.png',
+        contentType: 'image/png',
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.mimeType).toBe('image/png');
+    const saved = await Material.findById(res.body.id);
+    expect(saved).not.toBeNull();
+    expect(await fs.readFile(saved.storagePath)).toEqual(pngBuffer);
+  });
+
+  test('rejects a corrupted DOCX archive', async () => {
+    const res = await request(app)
+      .post(URL)
+      .set('Authorization', `Bearer ${student.token}`)
+      .field('title', validMetadata().title)
+      .field('subject', validMetadata().subject)
+      .field('description', validMetadata().description)
+      .attach('file', Buffer.from([80, 75, 3, 4, 1, 2, 3, 4]), {
+        filename: 'broken.docx',
+        contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.field).toBe('file');
+    expect(await Material.countDocuments()).toBe(0);
+    expect(await fs.readdir(STORAGE_DIR).catch(() => [])).toHaveLength(0);
+  });
+
+  test('removes the saved file if the database write fails', async () => {
+    const spy = jest.spyOn(Material, 'create')
+      .mockRejectedValueOnce(new Error('simulated database write failure'));
+
+    try {
+      const res = await post();
+      expect(res.status).toBe(500);
+      expect(await Material.countDocuments()).toBe(0);
+      expect(await fs.readdir(STORAGE_DIR).catch(() => [])).toHaveLength(0);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   test('rejects unauthenticated uploads', async () => {
     const res = await post(null);
     expect(res.status).toBe(401);
