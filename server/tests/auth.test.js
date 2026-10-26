@@ -55,6 +55,32 @@ describe('POST /api/auth/register', () => {
       .toBe(true);
   });
 
+  test('uses a unique salt when hashing the same password for different users', async () => {
+    const first = await request(app)
+      .post('/api/auth/register')
+      .send(validUser);
+
+    const second = await request(app)
+      .post('/api/auth/register')
+      .send({
+        ...validUser,
+        email: 'another-user@example.com',
+      });
+
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(201);
+
+    const firstUser = await User.findOne({ email: validUser.email })
+      .select('+passwordHash');
+    const secondUser = await User.findOne({
+      email: 'another-user@example.com',
+    }).select('+passwordHash');
+
+    expect(firstUser.passwordHash).not.toBe(secondUser.passwordHash);
+    expect(await bcrypt.compare(validUser.password, firstUser.passwordHash)).toBe(true);
+    expect(await bcrypt.compare(validUser.password, secondUser.passwordHash)).toBe(true);
+  });
+
   test('normalizes email to lowercase', async () => {
     const res = await request(app)
       .post('/api/auth/register')

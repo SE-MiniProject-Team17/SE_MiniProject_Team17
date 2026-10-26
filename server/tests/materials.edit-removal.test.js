@@ -1,0 +1,181 @@
+const request = require('supertest');
+const fs = require('fs/promises');
+const os = require('os');
+const path = require('path');
+
+const STORAGE_DIR = path.join(os.tmpdir(), `se-material-edit-remove-${process.pid}`);
+process.env.MATERIAL_STORAGE_DIR = STORAGE_DIR;
+
+const app = require('../src/app');
+const Material = require('../src/models/Material');
+const MaterialShare = require('../src/models/MaterialShare');
+const { startDB, clearDB, stopDB } = require('./helpers/db');
+const { tokenFor } = require('./helpers/auth');
+
+const URL = '/api/materials';
+const pdfBuffer = Buffer.from('%PDF-1.7\nEdit remove test\n%%EOF');
+
+let owner;
+let otherUser;
+
+async function uploadMaterial(user) {
+  return request(app)
+    .post(URL)
+    .set('Authorization', `Bearer ${user.token}`)
+    .field('title', 'Original title')
+    .field('subject', 'Original subject')
+    .field('description', 'Original description')
+    .attach('file', pdfBuffer, {
+      filename: 'edit-remove-test.pdf',
+      contentType: 'application/pdf',
+    });
+}
+
+beforeAll(startDB);
+
+beforeEach(async () => {
+  owner = await tokenFor('Student');
+  otherUser = await tokenFor('Student');
+  await fs.rm(STORAGE_DIR, { recursive: true, force: true });
+});
+
+afterEach(async () => {
+  await clearDB();
+  await fs.rm(STORAGE_DIR, { recursive: true, force: true });
+});
+
+afterAll(async () => {
+  await stopDB();
+  await fs.rm(STORAGE_DIR, { recursive: true, force: true });
+});
+
+describe('Material editing and removal', () => {
+  test('owner can edit material metadata', async () => {
+    const uploaded = await uploadMaterial(owner);
+    expect(uploaded.status).toBe(201);
+
+    const response = await request(app)
+      .patch(`${URL}/${uploaded.body.id}`)
+      .set('Authorization', `Bearer ${owner.token}`)
+      .send({
+        title: 'Updated title',
+        subject: 'Updated subject',
+        description: 'Updated description',
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      id: uploaded.body.id,
+      title: 'Updated title',
+      subject: 'Updated subject',
+      description: 'Updated description',
+    });
+
+    const saved = await Material.findById(uploaded.body.id);
+    expect(saved.title).toBe('Updated title');
+  });
+
+  test('another user cannot edit or delete material', async () => {
+    const uploaded = await uploadMaterial(owner);
+    expect(uploaded.status).toBe(201);
+
+    await MaterialShare.create({
+      material: uploaded.body.id,
+      owner: owner.id,
+      recipient: otherUser.id,
+      revokedAt: null,
+    });
+
+    const edit = await request(app)
+      .patch(`${URL}/${uploaded.body.id}`)
+      .set('Authorization', `Bearer ${otherUser.token}`)
+      .send({ title: 'Unauthorized title' });
+
+    const remove = await request(app)
+      .delete(`${URL}/${uploaded.body.id}`)
+      .set('Authorization', `Bearer ${otherUser.token}`);
+
+    expect(edit.status).toBe(403);
+    expect(edit.body.error.message).toBe('Access denied');
+    expect(remove.status).toBe(403);
+    expect(remove.body.error.message).toBe('Access denied');
+    const saved = await Material.findById(uploaded.body.id);
+
+    expect(saved).not.toBeNull();
+    expect(saved.title).toBe('Original title');
+    expect(saved.subject).toBe('Original subject');
+    expect(saved.description).toBe('Original description');
+
+    const share = await MaterialShare.findOne({
+      material: uploaded.body.id,
+      recipient: otherUser.id,
+    });
+    expect(share).not.toBeNull();
+    expect(share.revokedAt).toBeNull();
+  });
+
+  test('owner can delete material and its stored file', async () => {
+    const uploaded = await uploadMaterial(owner);
+    expect(uploaded.status).toBe(201);
+
+    const saved = await Material.findById(uploaded.body.id);
+    const storedPath = saved.storagePath;
+
+    const response = await request(app)
+      .delete(`${URL}/${uploaded.body.id}`)
+      .set('Authorization', `Bearer ${owner.token}`);
+
+    expect(response.status).toBe(200);
+    expect(await Material.findById(uploaded.body.id)).toBeNull();
+    await expect(fs.access(storedPath)).rejects.toThrow();
+  });
+
+  test('editing with an empty title is rejected', async () => {
+    const uploaded = await uploadMaterial(owner);
+    expect(uploaded.status).toBe(201);
+
+    const response = await request(app)
+      .patch(`${URL}/${uploaded.body.id}`)
+      .set('Authorization', `Bearer ${owner.token}`)
+      .send({ title: '   ' });
+
+    expect(response.status).toBe(400);
+    expect((await Material.findById(uploaded.body.id)).title).toBe('Original title');
+  });
+
+  test('deleted material cannot be viewed afterwards', async () => {
+    const uploaded = await uploadMaterial(owner);
+    expect(uploaded.status).toBe(201);
+
+    const removed = await request(app)
+      .delete(`${URL}/${uploaded.body.id}`)
+      .set('Authorization', `Bearer ${owner.token}`);
+
+    expect(removed.status).toBe(200);
+
+    const details = await request(app)
+      .get(`${URL}/${uploaded.body.id}`)
+      .set('Authorization', `Bearer ${owner.token}`);
+
+    expect(details.status).toBe(404);
+  });
+
+  test('deleting a material also removes its sharing records', async () => {
+    const uploaded = await uploadMaterial(owner);
+    expect(uploaded.status).toBe(201);
+
+    await MaterialShare.create({
+      material: uploaded.body.id,
+      owner: owner.id,
+      recipient: otherUser.id,
+      revokedAt: null,
+    });
+
+    const response = await request(app)
+      .delete(`${URL}/${uploaded.body.id}`)
+      .set('Authorization', `Bearer ${owner.token}`);
+
+    expect(response.status).toBe(200);
+    expect(await MaterialShare.countDocuments({ material: uploaded.body.id })).toBe(0);
+  });
+});

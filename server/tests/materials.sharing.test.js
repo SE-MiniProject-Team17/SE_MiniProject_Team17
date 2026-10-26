@@ -147,6 +147,7 @@ describe('Issue #8 - Material sharing and revocation', () => {
       .set('Authorization', `Bearer ${stranger.token}`);
 
     expect(res.status).toBe(403);
+    expect(res.body.error.message).toBe('Access denied');
 
     const share = await MaterialShare.findOne({
       material: material._id,
