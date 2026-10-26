@@ -21,7 +21,7 @@ function errorHandler(err, req, res, next) {
     return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Item unavailable' } });
   }
   // Unexpected error: log it on the server, send a generic message (no stack traces).
-  if (process.env.NODE_ENV !== 'test') console.error(err);
+  if (process.env.NODE_ENV !== 'test') console.error('Unexpected API error:', err.name || 'Error');
   return res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' } });
 }
 
