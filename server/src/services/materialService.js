@@ -1,3 +1,4 @@
+
 const fs = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
@@ -10,7 +11,8 @@ const { validateFileSignature } = require('../middleware/materialUpload');
 const { validateMaterialMetadata } = require('../validators/materialValidators');
 
 const STORAGE_DIR = path.resolve(
-  process.env.MATERIAL_STORAGE_DIR || path.join(__dirname, '../../uploads/materials')
+  process.env.MATERIAL_STORAGE_DIR ||
+    path.join(__dirname, '../../uploads/materials')
 );
 
 const DOCX_TYPE =
@@ -26,7 +28,9 @@ async function validateOfficeFile(file) {
   if (file.mimetype !== DOCX_TYPE && file.mimetype !== PPTX_TYPE) return;
 
   const requiredEntry =
-    file.mimetype === DOCX_TYPE ? 'word/document.xml' : 'ppt/presentation.xml';
+    file.mimetype === DOCX_TYPE
+      ? 'word/document.xml'
+      : 'ppt/presentation.xml';
 
   await new Promise((resolve, reject) => {
     let zipfile;
@@ -37,26 +41,39 @@ async function validateOfficeFile(file) {
       if (settled) return;
       settled = true;
       if (zipfile) zipfile.close();
-      reject(AppError.validation('file', 'Invalid or corrupted DOCX/PPTX archive'));
+      reject(
+        AppError.validation(
+          'file',
+          'Invalid or corrupted DOCX/PPTX archive'
+        )
+      );
     };
 
     yauzl.fromBuffer(file.buffer, { lazyEntries: true }, (err, openedZip) => {
       if (err || !openedZip) return fail();
+
       zipfile = openedZip;
       zipfile.on('error', fail);
+
       zipfile.on('entry', (entry) => {
         entries.add(entry.fileName);
         zipfile.readEntry();
       });
+
       zipfile.on('end', () => {
         if (settled) return;
-        if (entries.has('[Content_Types].xml') && entries.has(requiredEntry)) {
+
+        if (
+          entries.has('[Content_Types].xml') &&
+          entries.has(requiredEntry)
+        ) {
           settled = true;
           resolve();
         } else {
           fail();
         }
       });
+
       zipfile.readEntry();
     });
   });
@@ -82,7 +99,10 @@ async function createMaterial(data, file, userId) {
   };
 
   if (extension !== extensionByType[file.mimetype]) {
-    throw AppError.validation('file', 'File extension does not match its type');
+    throw AppError.validation(
+      'file',
+      'File extension does not match its type'
+    );
   }
 
   await fs.mkdir(STORAGE_DIR, { recursive: true });
@@ -113,12 +133,14 @@ async function createMaterial(data, file, userId) {
 }
 
 async function listMyMaterials(userId) {
-  return Material.find({ uploadedBy: userId })
+  return Material.find({
+    uploadedBy: userId,
+    moderationStatus: 'Active',
+  })
     .sort({ createdAt: -1 })
-    .select('-storagePath')
+    .select('-storagePath -checksum')
     .lean();
 }
-
 
 async function listSharedMaterials(userId) {
   const shares = await MaterialShare.find({
@@ -128,22 +150,32 @@ async function listSharedMaterials(userId) {
     .sort({ createdAt: -1 })
     .populate({
       path: 'material',
-      select: 'title subject description originalName mimeType size uploadedBy createdAt',
+      select:
+        'title subject description originalName mimeType size uploadedBy createdAt moderationStatus',
     })
     .lean();
 
   return shares
-    .filter((share) => share.material)
+    .filter(
+      (share) =>
+        share.material &&
+        share.material.moderationStatus === 'Active'
+    )
     .map((share) => ({
       shareId: share._id.toString(),
       ...share.material,
       id: share.material._id.toString(),
     }));
 }
+
 async function getMaterialForUser(id, userId) {
   const material = await Material.findById(id);
 
-  if (!material) throw AppError.unavailable('Material');
+  // Treat missing and hidden materials identically so their
+  // existence and details are not disclosed.
+  if (!material || material.moderationStatus !== 'Active') {
+    throw AppError.unavailable('Material');
+  }
 
   const isOwner =
     material.uploadedBy.toString() === userId.toString();
@@ -162,25 +194,30 @@ async function getMaterialForUser(id, userId) {
   return material;
 }
 
-
 async function getOwnedMaterial(id, userId) {
   const material = await Material.findById(id);
+
   if (!material) throw AppError.unavailable('Material');
+
   if (material.uploadedBy.toString() !== userId.toString()) {
     throw AppError.accessDenied();
   }
+
   return material;
 }
 
 async function updateMaterial(id, userId, data) {
   const material = await getOwnedMaterial(id, userId);
+
   const metadata = validateMaterialMetadata({
     title: data.title ?? material.title,
     subject: data.subject ?? material.subject,
     description: data.description ?? material.description,
   });
+
   Object.assign(material, metadata);
   await material.save();
+
   return material;
 }
 
@@ -201,7 +238,6 @@ async function deleteMaterial(id, userId) {
   return { id: material._id.toString() };
 }
 
-
 async function readVerifiedMaterialFile(material) {
   const storageRoot = path.resolve(STORAGE_DIR);
   const filePath = path.resolve(material.storagePath);
@@ -211,16 +247,21 @@ async function readVerifiedMaterialFile(material) {
   }
 
   let buffer;
+
   try {
     buffer = await fs.readFile(filePath);
   } catch (error) {
     if (error.code === 'ENOENT' || error.code === 'ENOTDIR') {
       throw AppError.unavailable('Material');
     }
+
     throw error;
   }
 
-  if (checksum(buffer) !== material.checksum || buffer.length !== material.size) {
+  if (
+    checksum(buffer) !== material.checksum ||
+    buffer.length !== material.size
+  ) {
     throw AppError.unavailable('Material');
   }
 

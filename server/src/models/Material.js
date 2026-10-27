@@ -13,6 +13,12 @@ const materialSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    moderationStatus: {
+      type: String,
+      enum: ['Active', 'Hidden'],
+      default: 'Active',
+      index: true,
+    },
     description: {
       type: String,
       required: true,

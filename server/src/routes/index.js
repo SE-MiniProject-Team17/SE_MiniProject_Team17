@@ -34,6 +34,6 @@ router.use('/performance', require('./performanceRoutes'));
 
 // Study Groups (Issue #25)
 router.use('/groups', require('./groupRoutes'));
-
+router.use('/moderation', require('./moderationRoutes'));
 router.use('/materials', require('./materialRoutes'));
 module.exports = router;
