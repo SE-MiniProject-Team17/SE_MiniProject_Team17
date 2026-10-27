@@ -13,7 +13,7 @@ import QuestionBankPage from './pages/QuestionBankPage';
 import QuestionFormPage from './pages/QuestionFormPage';
 import QuizzesPage from './pages/QuizzesPage';
 import QuizFormPage from './pages/QuizFormPage';
-
+import PerformancePage from './pages/PerformancePage';
 /*
  * All routes in one place. When you build your module, replace its
  * PlaceholderPage with your real page component (keep the same path and roles).
@@ -41,7 +41,10 @@ export default function App() {
             <Route path="/materials/*" element={<MaterialsPage />} />
             <Route path="/quizzes" element={<QuizzesPage />} />
             <Route path="/quizzes/*" element={<PlaceholderPage title="Quizzes" issues="#17â€“#19" />} />
-            <Route path="/performance/*" element={<PlaceholderPage title="Performance" issues="#22â€“#24" />} />
+            {/* Student only */}
+            <Route element={<ProtectedRoute roles={[ROLES.STUDENT]} />}>
+              <Route path="/performance" element={<PerformancePage />} />
+            </Route>
           </Route>
 
           {/* Faculty only */}

@@ -13,7 +13,7 @@ const NAV_LINKS = [
   { to: '/materials', label: 'Materials', roles: [ROLES.STUDENT, ROLES.FACULTY] },
   { to: '/questions', label: 'Question Bank', roles: [ROLES.FACULTY] },
   { to: '/quizzes', label: 'Quizzes', roles: [ROLES.STUDENT, ROLES.FACULTY] },
-  { to: '/performance', label: 'Performance', roles: [ROLES.STUDENT, ROLES.FACULTY] },
+  { to: '/performance', label: 'Performance', roles: [ROLES.STUDENT] },
   { to: '/groups', label: 'Study Groups', roles: [ROLES.STUDENT, ROLES.FACULTY, ROLES.ADMIN] },
   { to: '/profile', label: 'Profile', roles: [ROLES.STUDENT, ROLES.FACULTY, ROLES.ADMIN] },
 ];

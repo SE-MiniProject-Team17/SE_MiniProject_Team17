@@ -17,6 +17,8 @@ router.use('/account', require('./accountRoutes'));
 // Quizzes – authoring (#16); quiz taking (#17-#19) adds its routes to quizRoutes too
 router.use('/quizzes', require('./quizRoutes'));
 
+// Student's personal performance history (#22)
+router.use('/performance', require('./performanceRoutes'));
 /*
  * Each module mounts its routes here. Add ONE line for your module, e.g.
  *
