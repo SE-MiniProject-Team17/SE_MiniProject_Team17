@@ -1,3 +1,4 @@
+
 const mongoose = require('mongoose');
 const StudyGroup = require('../models/StudyGroup');
 const AppError = require('../utils/AppError');
@@ -46,11 +47,13 @@ async function joinGroup(groupId, studentId) {
     throw AppError.notFound();
   }
 
-  // Atomically add the student only when they are not a member.
+  // Join only if the group is active and the student is not
+  // already a member.
   const group = await StudyGroup.findOneAndUpdate(
     {
       _id: groupId,
       members: { $ne: studentId },
+      moderationStatus: 'Active',
     },
     {
       $addToSet: { members: studentId },
@@ -65,13 +68,13 @@ async function joinGroup(groupId, studentId) {
     return group;
   }
 
-  // Determine whether the group is missing or the student
-  // is already a member.
+  // Check availability before checking membership so hidden
+  // groups do not reveal their details.
   const existing = await StudyGroup.findById(groupId)
-    .select('_id members')
+    .select('_id members moderationStatus')
     .lean();
 
-  if (!existing) {
+  if (!existing || existing.moderationStatus !== 'Active') {
     throw AppError.notFound();
   }
 
@@ -86,11 +89,15 @@ async function joinGroup(groupId, studentId) {
     );
   }
 
+  // Return the same generic unavailable response for other cases.
   throw AppError.notFound();
 }
 
 async function listMyGroups(studentId) {
-  return StudyGroup.find({ members: studentId })
+  return StudyGroup.find({
+    members: studentId,
+    moderationStatus: 'Active',
+  })
     .sort({ createdAt: -1 })
     .select('name description createdBy members createdAt updatedAt')
     .lean();

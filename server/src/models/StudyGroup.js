@@ -14,6 +14,12 @@ const studyGroupSchema = new mongoose.Schema(
       maxlength: 500,
       default: '',
     },
+    moderationStatus: {
+      type: String,
+      enum: ['Active', 'Hidden'],
+      default: 'Active',
+      index: true,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
