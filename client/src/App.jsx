@@ -13,6 +13,7 @@ import QuestionBankPage from './pages/QuestionBankPage';
 import QuestionFormPage from './pages/QuestionFormPage';
 import QuizzesPage from './pages/QuizzesPage';
 import QuizFormPage from './pages/QuizFormPage';
+import QuizSubmissionsPage from './pages/QuizSubmissionsPage';
 import PerformancePage from './pages/PerformancePage';
 /*
  * All routes in one place. When you build your module, replace its
@@ -54,6 +55,7 @@ export default function App() {
             <Route path="/questions/:id/edit" element={<QuestionFormPage key="edit" />} />
             <Route path="/quizzes/new" element={<QuizFormPage key="new" />} />
             <Route path="/quizzes/:id/edit" element={<QuizFormPage key="edit" />} />
+            <Route path="/quizzes/:id/submissions" element={<QuizSubmissionsPage />} />
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />

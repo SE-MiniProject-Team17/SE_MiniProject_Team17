@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { Quiz, STATUS } = require('../models/Quiz');
 const { Question } = require('../models/Question');
+const User = require('../models/User');
 const AppError = require('../utils/AppError');
 
 /**
@@ -204,6 +205,39 @@ async function toOwnerView(quiz) {
   };
 }
 
+/**
+ * #50 – REQ-QZ-16: the owner's view of the submissions on a quiz: each Student's name, score,
+ * percentage and submission time, newest first. Only completed attempts count. Answers, e-mail
+ * addresses and ids of Students are never sent. The caller has already checked ownership
+ * (loadOwnQuiz); no submissions is not an error, the client shows "No submissions yet".
+ */
+async function listSubmissions(quiz) {
+  const Attempt = attemptModel();
+  const attempts = Attempt
+    ? await Attempt.find({ quiz: quiz._id, status: 'Completed', submittedAt: { $ne: null } })
+        .select('student score totalQuestions percentage submittedAt')
+        .sort({ submittedAt: -1 })
+        .lean()
+    : [];
+
+  const students = attempts.length
+    ? await User.find({ _id: { $in: attempts.map((a) => a.student) } }).select('fullName').lean()
+    : [];
+  const nameById = new Map(students.map((u) => [u._id.toString(), u.fullName]));
+
+  return {
+    quiz: { id: quiz.id, title: quiz.title },
+    submissions: attempts.map((a) => ({
+      id: a._id.toString(),
+      studentName: nameById.get(a.student.toString()) || 'Student unavailable',
+      score: a.score,
+      totalQuestions: a.totalQuestions,
+      percentage: a.percentage,
+      submittedAt: a.submittedAt,
+    })),
+  };
+}
+
 module.exports = {
   createQuiz,
   getQuiz,
@@ -213,6 +247,7 @@ module.exports = {
   updateQuiz,
   publishQuiz,
   deleteQuiz,
+  listSubmissions,
   hasAttempts,
   listOwnQuizzes,
   toOwnerView,

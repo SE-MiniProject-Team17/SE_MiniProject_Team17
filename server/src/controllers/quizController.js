@@ -58,4 +58,13 @@ async function remove(req, res, next) {
   }
 }
 
-module.exports = { create, listMine, getOne, update, publish, remove };
+/** #50 – GET /api/quizzes/:id/submissions -> 200 { quiz, submissions } (owner only) */
+async function submissions(req, res, next) {
+  try {
+    return res.json(await quizService.listSubmissions(req.quiz));
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { create, listMine, getOne, update, publish, remove, submissions };

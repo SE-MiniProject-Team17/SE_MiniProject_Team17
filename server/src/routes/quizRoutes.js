@@ -22,6 +22,9 @@ router.get('/:id', faculty, loadOwnQuiz, controller.getOne);
 router.put('/:id', faculty, loadOwnQuiz, prepareQuizEdit, quizRules, validate, controller.update);
 router.post('/:id/publish', faculty, loadOwnQuiz, controller.publish);
 
+// #50 – the owner's view of the submissions on a quiz (REQ-QZ-16, REQ-QZ-17)
+router.get('/:id/submissions', faculty, loadOwnQuiz, controller.submissions);
+
 // #42 – deletion (REQ-QZ-05)
 router.delete('/:id', faculty, loadOwnQuiz, controller.remove);
 
