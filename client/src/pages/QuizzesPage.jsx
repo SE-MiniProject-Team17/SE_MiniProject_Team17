@@ -151,7 +151,10 @@ function MyQuizzes() {
                             </button>
                           </>
                         ) : (
-                          <span className="muted small">Published {formatDateTime(q.publishedAt)}</span>
+                          <>
+                            <Link to={`/quizzes/${q.id}/submissions`}>Submissions</Link>
+                            <span className="muted small">Published {formatDateTime(q.publishedAt)}</span>
+                          </>
                         )}
                         <button type="button" className="link-button danger-link" onClick={() => setDeleteId(q.id)}>
                           Delete

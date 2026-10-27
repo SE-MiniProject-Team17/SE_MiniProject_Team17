@@ -7,3 +7,4 @@ export const getQuiz = (id) => api.get(`/quizzes/${id}`).then((r) => r.data);
 export const updateQuiz = (id, data) => api.put(`/quizzes/${id}`, data).then((r) => r.data);
 export const publishQuiz = (id) => api.post(`/quizzes/${id}/publish`).then((r) => r.data);
 export const deleteQuiz = (id) => api.delete(`/quizzes/${id}`).then((r) => r.data);
+export const getQuizSubmissions = (id) => api.get(`/quizzes/${id}/submissions`).then((r) => r.data);
