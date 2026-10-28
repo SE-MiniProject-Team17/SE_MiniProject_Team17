@@ -21,4 +21,48 @@ async function startAttempt(req, res, next) {
   }
 }
 
-module.exports = { listAvailable, startAttempt };
+async function getAttempt(req, res, next) {
+  try {
+    const attempt = await studentQuizService.getAttempt(
+      req.params.attemptId,
+      req.user.id || req.user._id || req.user.sub
+    );
+    return res.json({ attempt });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function saveAnswer(req, res, next) {
+  try {
+    const result = await studentQuizService.saveAnswer(
+      req.params.attemptId,
+      req.user.id || req.user._id || req.user.sub,
+      req.body.questionId,
+      req.body.selectedOption
+    );
+    return res.json({ result });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function submitAttempt(req, res, next) {
+  try {
+    const attempt = await studentQuizService.submitAttempt(
+      req.params.attemptId,
+      req.user.id || req.user._id || req.user.sub
+    );
+    return res.json({ attempt });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = {
+  listAvailable,
+  startAttempt,
+  getAttempt,
+  saveAnswer,
+  submitAttempt,
+};

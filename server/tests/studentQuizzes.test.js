@@ -1,4 +1,4 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const request = require('supertest');
 const app = require('../src/app');
 const { Quiz } = require('../src/models/Quiz');
@@ -169,5 +169,19 @@ describe('Issue #17: student quiz listing and attempt initiation', () => {
   test('requires authentication', async () => {
     expect((await request(app).get('/api/quizzes/available')).status).toBe(401);
     expect((await request(app).post(`/api/quizzes/${openQuiz.id}/attempts`)).status).toBe(401);
+  });
+
+  test('returns quiz questions within three seconds when starting an attempt', async () => {
+    const startedAt = performance.now();
+
+    const res = await request(app)
+      .post(`/api/quizzes/${openQuiz.id}/attempts`)
+      .set(as(student));
+
+    const elapsedMs = performance.now() - startedAt;
+
+    expect(res.status).toBe(201);
+    expect(res.body.attempt.questions).toHaveLength(1);
+    expect(elapsedMs).toBeLessThan(3000);
   });
 });

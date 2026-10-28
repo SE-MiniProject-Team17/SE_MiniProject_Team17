@@ -1,5 +1,20 @@
 const mongoose = require('mongoose');
 
+const answerSchema = new mongoose.Schema(
+  {
+    questionId: {
+      type: Number,
+      required: true,
+    },
+    selectedOption: {
+      type: String,
+      enum: ['A', 'B', 'C', 'D', null],
+      default: null,
+    },
+  },
+  { _id: false }
+);
+
 const attemptSchema = new mongoose.Schema(
   {
     student: {
@@ -15,27 +30,12 @@ const attemptSchema = new mongoose.Schema(
       index: true,
     },
     quizTitle: {
-        type: String,
-        trim: true,
-        default: '',
+      type: String,
+      trim: true,
+      default: '',
     },
     answers: {
-      type: [
-        new mongoose.Schema(
-          {
-            questionId: {
-              type: Number,
-              required: true,
-            },
-            selectedOption: {
-              type: String,
-              enum: ['A', 'B', 'C', 'D', null],
-              default: null,
-            },
-          },
-          { _id: false }
-        ),
-      ],
+      type: [answerSchema],
       default: [],
     },
     score: {
@@ -60,9 +60,28 @@ const attemptSchema = new mongoose.Schema(
       default: 'InProgress',
       index: true,
     },
+    startedAt: {
+      type: Date,
+      default: Date.now,
+      required: true,
+    },
+    expiresAt: {
+      type: Date,
+      default: function () {
+        const start = this.startedAt || new Date();
+        return new Date(start.getTime() + 180 * 60 * 1000);
+      },
+      required: true,
+      index: true,
+    },
     submittedAt: {
       type: Date,
       default: null,
+    },
+    revision: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
   },
   { timestamps: true }

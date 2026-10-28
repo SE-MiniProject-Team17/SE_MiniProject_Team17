@@ -12,6 +12,7 @@ import MaterialsPage from './pages/MaterialsPage';
 import QuestionBankPage from './pages/QuestionBankPage';
 import QuestionFormPage from './pages/QuestionFormPage';
 import QuizzesPage from './pages/QuizzesPage';
+import QuizAttemptPage from './pages/QuizAttemptPage';
 import QuizFormPage from './pages/QuizFormPage';
 import QuizSubmissionsPage from './pages/QuizSubmissionsPage';
 import PerformancePage from './pages/PerformancePage';
@@ -34,14 +35,19 @@ export default function App() {
           {/* Any logged-in user */}
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<PlaceholderPage title="My Profile" issues="#6" />} />
-            <Route path="/groups/*" element={<PlaceholderPage title="Study Groups" issues="#25â€“#27" />} />
+            <Route path="/groups/*" element={<PlaceholderPage title="Study Groups" issues="#25Ã¢â‚¬â€œ#27" />} />
           </Route>
 
           {/* Students and Faculty */}
           <Route element={<ProtectedRoute roles={[ROLES.STUDENT, ROLES.FACULTY]} />}>
             <Route path="/materials/*" element={<MaterialsPage />} />
             <Route path="/quizzes" element={<QuizzesPage />} />
-            <Route path="/quizzes/*" element={<PlaceholderPage title="Quizzes" issues="#17â€“#19" />} />
+            <Route element={<ProtectedRoute roles={[ROLES.STUDENT]} />}>
+              <Route path="/quizzes/attempts/:attemptId" element={<QuizAttemptPage />} />
+            </Route>
+            <Route element={<ProtectedRoute roles={[ROLES.STUDENT]} />}>
+           </Route>
+            <Route path="/quizzes/*" element={<PlaceholderPage title="Quizzes" issues="#17Ã¢â‚¬â€œ#19" />} />
             {/* Student only */}
             <Route element={<ProtectedRoute roles={[ROLES.STUDENT]} />}>
               <Route path="/performance" element={<PerformancePage />} />
@@ -63,7 +69,7 @@ export default function App() {
       </main>
       <footer className="site-footer">
         <div>
-          <span>Study &amp; Quiz Â· Team 17 SE Mini Project</span>
+          <span>Study &amp; Quiz Ã‚Â· Team 17 SE Mini Project</span>
           <span>Need help? See the Help page.</span>
         </div>
       </footer>
