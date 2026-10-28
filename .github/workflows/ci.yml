@@ -3,15 +3,12 @@ name: CI
 
 on:
   pull_request:
-    branches:
-      - main
-      - "feat/**"
-      - "feature/**"
+    branches: [main]
   push:
     branches:
       - main
-      - "feat/**"
       - "feature/**"
+      - "feat/**"
 
 jobs:
   server:
