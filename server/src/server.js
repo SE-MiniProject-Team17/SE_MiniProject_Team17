@@ -14,6 +14,6 @@ connectDB(process.env.MONGO_URI)
     app.listen(PORT, () => console.log(`API listening on http://localhost:${PORT}/api`));
   })
   .catch((err) => {
-    console.error('Failed to connect to MongoDB', err.message);
+    console.error('Failed to connect to MongoDB. Check database configuration and connectivity.');
     process.exit(1);
   });
