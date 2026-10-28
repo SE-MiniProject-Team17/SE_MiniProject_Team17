@@ -1,6 +1,10 @@
+
 import { useEffect, useState } from 'react';
 import { apiError } from '../api/client';
-import { getMyPerformance } from '../api/performance';
+import {
+  getMyPerformance,
+  getMyTopicPerformance,
+} from '../api/performance';
 
 function formatSubmissionDate(value) {
   if (!value) return '—';
@@ -14,6 +18,7 @@ function formatSubmissionDate(value) {
 
 export default function PerformancePage() {
   const [performance, setPerformance] = useState(null);
+  const [topicPerformance, setTopicPerformance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -22,9 +27,15 @@ export default function PerformancePage() {
 
     async function loadPerformance() {
       try {
-        const data = await getMyPerformance();
+        const [personalData, topicData] = await Promise.all([
+          getMyPerformance(),
+          getMyTopicPerformance(),
+        ]);
 
-        if (active) setPerformance(data);
+        if (active) {
+          setPerformance(personalData);
+          setTopicPerformance(topicData);
+        }
       } catch (err) {
         if (active) setError(apiError(err).message);
       } finally {
@@ -53,6 +64,7 @@ export default function PerformancePage() {
   }
 
   const { summary, attempts } = performance;
+  const topics = topicPerformance?.topics || [];
 
   return (
     <section>
@@ -109,6 +121,38 @@ export default function PerformancePage() {
             </table>
           </div>
         </>
+      )}
+
+      <h2>Topic-level performance</h2>
+
+      {topics.length === 0 ? (
+        <p className="empty" role="status">
+          No topic-level performance data is available yet.
+          Complete a quiz with recorded answers to see your results by topic.
+        </p>
+      ) : (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Topic</th>
+                <th scope="col">Answered questions</th>
+                <th scope="col">Correct answers</th>
+                <th scope="col">Accuracy</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topics.map((topic) => (
+                <tr key={topic.topic}>
+                  <td>{topic.topic}</td>
+                  <td>{topic.totalQuestions}</td>
+                  <td>{topic.correctAnswers}</td>
+                  <td>{topic.accuracy.toFixed(2)}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );
