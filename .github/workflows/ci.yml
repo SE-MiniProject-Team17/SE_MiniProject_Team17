@@ -1,13 +1,18 @@
+
 name: CI
 
-# Runs on every pull request to main and on every push to main.
-# A PR should only be merged when both jobs are green.
+# Run on pull requests targeting main or feature branches,
+# and on pushes to main or feature branches.
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - "feat/**"
+      - "feature/**"
   push:
     branches:
       - main
+      - "feat/**"
       - "feature/**"
 
 jobs:
