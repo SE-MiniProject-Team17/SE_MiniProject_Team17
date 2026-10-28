@@ -15,34 +15,51 @@ import QuizzesPage from './pages/QuizzesPage';
 import QuizFormPage from './pages/QuizFormPage';
 import QuizSubmissionsPage from './pages/QuizSubmissionsPage';
 import PerformancePage from './pages/PerformancePage';
-/*
- * All routes in one place. When you build your module, replace its
- * PlaceholderPage with your real page component (keep the same path and roles).
- */
+
 export default function App() {
   return (
     <>
       <Navbar />
+
       <main className="container">
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<PlaceholderPage title="Register" issues="#4" />} />
+          <Route
+            path="/register"
+            element={<PlaceholderPage title="Register" issues="#4" />}
+          />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/forbidden" element={<ForbiddenPage />} />
 
           {/* Any logged-in user */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<PlaceholderPage title="My Profile" issues="#6" />} />
-            <Route path="/groups/*" element={<PlaceholderPage title="Study Groups" issues="#25â€“#27" />} />
+            <Route
+              path="/profile"
+              element={<PlaceholderPage title="My Profile" issues="#6" />}
+            />
+            <Route
+              path="/groups/*"
+              element={
+                <PlaceholderPage
+                  title="Study Groups"
+                  issues="#25–#27"
+                />
+              }
+            />
           </Route>
 
           {/* Students and Faculty */}
-          <Route element={<ProtectedRoute roles={[ROLES.STUDENT, ROLES.FACULTY]} />}>
+          <Route
+            element={
+              <ProtectedRoute roles={[ROLES.STUDENT, ROLES.FACULTY]} />
+            }
+          >
             <Route path="/materials/*" element={<MaterialsPage />} />
             <Route path="/quizzes" element={<QuizzesPage />} />
-            <Route path="/quizzes/*" element={<PlaceholderPage title="Quizzes" issues="#17â€“#19" />} />
-            {/* Student only */}
+
+            {/* Students only */}
             <Route element={<ProtectedRoute roles={[ROLES.STUDENT]} />}>
               <Route path="/performance" element={<PerformancePage />} />
             </Route>
@@ -51,19 +68,36 @@ export default function App() {
           {/* Faculty only */}
           <Route element={<ProtectedRoute roles={[ROLES.FACULTY]} />}>
             <Route path="/questions" element={<QuestionBankPage />} />
-            <Route path="/questions/new" element={<QuestionFormPage key="new" />} />
-            <Route path="/questions/:id/edit" element={<QuestionFormPage key="edit" />} />
-            <Route path="/quizzes/new" element={<QuizFormPage key="new" />} />
-            <Route path="/quizzes/:id/edit" element={<QuizFormPage key="edit" />} />
-            <Route path="/quizzes/:id/submissions" element={<QuizSubmissionsPage />} />
+            <Route
+              path="/questions/new"
+              element={<QuestionFormPage key="new" />}
+            />
+            <Route
+              path="/questions/:id/edit"
+              element={<QuestionFormPage key="edit" />}
+            />
+            <Route
+              path="/quizzes/new"
+              element={<QuizFormPage key="new" />}
+            />
+            <Route
+              path="/quizzes/:id/edit"
+              element={<QuizFormPage key="edit" />}
+            />
+            <Route
+              path="/quizzes/:id/submissions"
+              element={<QuizSubmissionsPage />}
+            />
           </Route>
 
+          {/* Fallback */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
+
       <footer className="site-footer">
         <div>
-          <span>Study &amp; Quiz Â· Team 17 SE Mini Project</span>
+          <span>Study &amp; Quiz · Team 17 SE Mini Project</span>
           <span>Need help? See the Help page.</span>
         </div>
       </footer>
