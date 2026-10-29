@@ -9,3 +9,13 @@ export const deleteQuiz = (id) => api.delete(`/quizzes/${id}`).then((r) => r.dat
 export const getQuizSubmissions = (id) => api.get(`/quizzes/${id}/submissions`).then((r) => r.data);
 export const listAvailableQuizzes = () => api.get('/quizzes/available').then((r) => r.data.quizzes);
 export const startQuizAttempt = (id) => api.post(`/quizzes/${id}/attempts`).then((r) => r.data.attempt);
+
+export const getQuizAttempt = (attemptId) =>
+  api.get(`/quizzes/attempts/${attemptId}`).then((r) => r.data.attempt);
+
+export const saveQuizAnswer = (attemptId, questionId, selectedOption) =>
+  api.patch(`/quizzes/attempts/${attemptId}/answers`, { questionId, selectedOption })
+    .then((r) => r.data.result);
+
+export const submitQuizAttempt = (attemptId) =>
+  api.post(`/quizzes/attempts/${attemptId}/submit`).then((r) => r.data.attempt);

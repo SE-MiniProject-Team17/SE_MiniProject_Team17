@@ -18,7 +18,10 @@ const faculty = requireRole(ROLES.FACULTY);
 const student = requireRole(ROLES.STUDENT);
 
 router.get('/available', student, studentController.listAvailable);
-router.post('/:id/attempts', student, studentController.startAttempt); // REQ-QZ-17 / SEC-QZ-01: only Faculty manage quizzes
+router.post('/:id/attempts', student, studentController.startAttempt); // REQ-QZ-17
+router.get('/attempts/:attemptId', student, studentController.getAttempt);
+router.patch('/attempts/:attemptId/answers', student, studentController.saveAnswer);
+router.post('/attempts/:attemptId/submit', student, studentController.submitAttempt);
 
 // #16 â€“ quiz creation and Draft management (REQ-QZ-01 to REQ-QZ-05)
 router.post('/', faculty, quizRules, validate, controller.create);

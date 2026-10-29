@@ -1,5 +1,5 @@
-﻿import { useCallback, useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { apiError } from '../api/client';
 import {
   deleteQuiz,
@@ -19,6 +19,7 @@ export default function QuizzesPage() {
 }
 
 function StudentQuizzes() {
+  const navigate = useNavigate();
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -45,7 +46,7 @@ function StudentQuizzes() {
     setNotice('');
     try {
       const attempt = await startQuizAttempt(quiz.id);
-      setNotice(`Attempt started for "${attempt.title}". Your attempt ID is ${attempt.id}.`);
+      navigate(`/quizzes/attempts/${attempt.id}`);
     } catch (err) {
       setError(apiError(err).message);
     } finally {

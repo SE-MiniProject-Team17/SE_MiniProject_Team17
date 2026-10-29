@@ -12,6 +12,7 @@ import MaterialsPage from './pages/MaterialsPage';
 import QuestionBankPage from './pages/QuestionBankPage';
 import QuestionFormPage from './pages/QuestionFormPage';
 import QuizzesPage from './pages/QuizzesPage';
+import QuizAttemptPage from './pages/QuizAttemptPage';
 import QuizFormPage from './pages/QuizFormPage';
 import QuizSubmissionsPage from './pages/QuizSubmissionsPage';
 import PerformancePage from './pages/PerformancePage';
@@ -42,10 +43,7 @@ export default function App() {
             <Route
               path="/groups/*"
               element={
-                <PlaceholderPage
-                  title="Study Groups"
-                  issues="#25–#27"
-                />
+                <PlaceholderPage title="Study Groups" issues="#25–#27" />
               }
             />
           </Route>
@@ -61,6 +59,10 @@ export default function App() {
 
             {/* Students only */}
             <Route element={<ProtectedRoute roles={[ROLES.STUDENT]} />}>
+              <Route
+                path="/quizzes/attempts/:attemptId"
+                element={<QuizAttemptPage />}
+              />
               <Route path="/performance" element={<PerformancePage />} />
             </Route>
           </Route>
