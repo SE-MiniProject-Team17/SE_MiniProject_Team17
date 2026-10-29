@@ -34,6 +34,27 @@ describe('API base', () => {
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
   });
 
+  test.each([
+    '/api/auth/register',
+    '/api/auth/login',
+    '/api/materials',
+  ])('malformed JSON at %s returns a safe error and the app continues responding', async (path) => {
+    const res = await request(app)
+      .post(path)
+      .set('Content-Type', 'application/json')
+      .send('{"incomplete":');
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({
+      error: { code: 'VALIDATION_ERROR', message: 'Malformed JSON body' },
+    });
+    expect(JSON.stringify(res.body)).not.toContain('incomplete');
+
+    const health = await request(app).get('/api/health');
+    expect(health.status).toBe(200);
+    expect(health.body).toEqual({ status: 'ok' });
+  });
+
   test('unexpected errors return a generic 500 without leaking internal details', async () => {
     const testApp = express();
 
