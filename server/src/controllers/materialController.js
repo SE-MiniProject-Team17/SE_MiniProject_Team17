@@ -117,7 +117,8 @@ async function update(req, res, next) {
     const material = await materialService.updateMaterial(
       req.params.id,
       req.user.id,
-      req.body || {}
+      req.body || {},
+      req.file
     );
 
     return res.status(200).json({
@@ -125,6 +126,10 @@ async function update(req, res, next) {
       title: material.title,
       subject: material.subject,
       description: material.description,
+      originalName: material.originalName,
+      mimeType: material.mimeType,
+      size: material.size,
+      checksum: material.checksum,
       uploadedBy: material.uploadedBy.toString(),
       createdAt: material.createdAt,
       updatedAt: material.updatedAt,

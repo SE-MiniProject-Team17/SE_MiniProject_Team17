@@ -205,6 +205,9 @@ describe('Shared material viewing and downloading', () => {
     expect(download.status).toBe(200);
     expect(download.headers['content-type']).toContain('application/pdf');
     expect(Buffer.from(download.body)).toEqual(pdfBuffer);
+    expect(
+      crypto.createHash('sha256').update(download.body).digest('hex')
+    ).toBe(uploaded.body.checksum);
   });
 
   test('revoked recipient loses view and download access immediately', async () => {
