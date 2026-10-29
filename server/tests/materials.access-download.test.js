@@ -3,6 +3,7 @@ const fs = require('fs/promises');
 const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
+const { performance } = require('node:perf_hooks');
 
 const STORAGE_DIR = path.join(os.tmpdir(), `se-material-access-${process.pid}`);
 process.env.MATERIAL_STORAGE_DIR = STORAGE_DIR;
@@ -176,22 +177,29 @@ describe('Shared material viewing and downloading', () => {
     await createRegisteredUser(owner, 'Owner');
     await createRegisteredUser(otherUser, 'Recipient');
 
+    const shareStartedAt = performance.now();
     const shareResponse = await request(app)
       .post(`${URL}/${uploaded.body.id}/share`)
       .set('Authorization', `Bearer ${owner.token}`)
       .send({ email: `recipient-${otherUser.id}@example.com` });
+    const shareConfirmedAt = performance.now();
 
     expect(shareResponse.status).toBe(201);
 
     const details = await request(app)
       .get(`${URL}/${uploaded.body.id}`)
       .set('Authorization', `Bearer ${otherUser.token}`);
+    const sharePropagationMs = performance.now() - shareConfirmedAt;
 
     const download = await request(app)
       .get(`${URL}/${uploaded.body.id}/download`)
       .set('Authorization', `Bearer ${otherUser.token}`);
 
     expect(details.status).toBe(200);
+    console.log(
+      `[TC-MP-03 local] share confirmation-to-authorized-read ${sharePropagationMs.toFixed(2)} ms; owner request ${(shareConfirmedAt - shareStartedAt).toFixed(2)} ms`
+    );
+    expect(sharePropagationMs).toBeLessThan(2000);
     expect(details.body.id).toBe(uploaded.body.id);
     expect(details.body.storagePath).toBeUndefined();
     expect(download.status).toBe(200);
@@ -213,21 +221,28 @@ describe('Shared material viewing and downloading', () => {
 
     expect(shareResponse.status).toBe(201);
 
+    const revokeStartedAt = performance.now();
     const revokeResponse = await request(app)
       .delete(`${URL}/${uploaded.body.id}/share/${otherUser.id}`)
       .set('Authorization', `Bearer ${owner.token}`);
+    const revokeConfirmedAt = performance.now();
 
     expect(revokeResponse.status).toBe(200);
 
     const details = await request(app)
       .get(`${URL}/${uploaded.body.id}`)
       .set('Authorization', `Bearer ${otherUser.token}`);
+    const revocationPropagationMs = performance.now() - revokeConfirmedAt;
 
     const download = await request(app)
       .get(`${URL}/${uploaded.body.id}/download`)
       .set('Authorization', `Bearer ${otherUser.token}`);
 
     expect(details.status).toBe(403);
+    console.log(
+      `[TC-MP-03 local] revocation confirmation-to-denied-read ${revocationPropagationMs.toFixed(2)} ms; owner request ${(revokeConfirmedAt - revokeStartedAt).toFixed(2)} ms`
+    );
+    expect(revocationPropagationMs).toBeLessThan(2000);
     expect(details.body.error.message).toBe('Access denied');
     expect(download.status).toBe(403);
     expect(download.body.error.message).toBe('Access denied');
