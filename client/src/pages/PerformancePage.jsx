@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { apiError } from '../api/client';
 import {
   getMyPerformance,
@@ -51,7 +52,7 @@ export default function PerformancePage() {
   }, []);
 
   if (loading) {
-    return <p className="muted">Loading your performance…</p>;
+    return <p className="muted">Loading your performance...</p>;
   }
 
   if (error) {
@@ -104,6 +105,7 @@ export default function PerformancePage() {
                   <th scope="col">Score</th>
                   <th scope="col">Percentage</th>
                   <th scope="col">Submitted</th>
+                  <th scope="col">Results</th>
                 </tr>
               </thead>
               <tbody>
@@ -115,6 +117,11 @@ export default function PerformancePage() {
                     </td>
                     <td>{attempt.percentage.toFixed(2)}%</td>
                     <td>{formatSubmissionDate(attempt.submittedAt)}</td>
+                    <td>
+                      <Link to={`/quizzes/attempts/${attempt.id}`}>
+                        View results
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>
