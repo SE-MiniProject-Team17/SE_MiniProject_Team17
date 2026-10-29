@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Attempt = require('../models/Attempt');
 const { Quiz } = require('../models/Quiz');
 const AppError = require('../utils/AppError');
+const User = require('../models/User');
 
 async function getMyPerformance(studentId) {
   if (!mongoose.isValidObjectId(studentId)) {
@@ -216,7 +217,7 @@ async function getFacultyDashboard(facultyId) {
 
   const studentIds = [...studentStats.keys()];
   const students = studentIds.length
-    ? await require('../models/User').find({
+    ? await User.find({
         _id: { $in: studentIds },
       }).select('_id fullName').lean()
     : [];

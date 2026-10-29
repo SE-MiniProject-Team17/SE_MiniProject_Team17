@@ -123,7 +123,7 @@ test('faculty sees summaries for owned quizzes and completed submissions only', 
   expect(JSON.stringify(res.body)).not.toMatch(/@test\.com|correctOption|selectedOption/);
 });
 
-test('faculty with no quizzes gets an empty dashboard', async () => {
+test('faculty with a quiz but no submissions gets an empty performance summary', async () => {
   const res = await dashboard(otherFaculty);
   expect(res.status).toBe(200);
   expect(res.body.summary).toMatchObject({
@@ -133,7 +133,25 @@ test('faculty with no quizzes gets an empty dashboard', async () => {
     uniqueStudents: 0,
     averagePercentage: 0,
   });
+  expect(res.body.quizzes).toHaveLength(1);
   expect(res.body.quizzes[0].title).toBe('Other faculty quiz');
+  expect(res.body.students).toEqual([]);
+});
+
+test('faculty with zero quizzes gets an empty dashboard', async () => {
+  await Quiz.deleteMany({ owner: ownerId });
+
+  const res = await dashboard(faculty);
+
+  expect(res.status).toBe(200);
+  expect(res.body.summary).toEqual({
+    totalQuizzes: 0,
+    quizzesWithSubmissions: 0,
+    totalSubmissions: 0,
+    uniqueStudents: 0,
+    averagePercentage: 0,
+  });
+  expect(res.body.quizzes).toEqual([]);
   expect(res.body.students).toEqual([]);
 });
 

@@ -94,9 +94,11 @@ export default function FacultyPerformancePage() {
                     {quiz.submissionCount ? percentage(quiz.averagePercentage) : '—'}
                   </td>
                   <td>
-                    <Link to={`/quizzes/${quiz.id}/submissions`}>
-                      View submissions
-                    </Link>
+                    {quiz.status === 'Published' && (
+                      <Link to={`/quizzes/${quiz.id}/submissions`}>
+                        View submissions
+                      </Link>
+                    )}
                   </td>
                 </tr>
               ))}

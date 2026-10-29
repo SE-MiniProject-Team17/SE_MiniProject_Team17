@@ -23,7 +23,8 @@ const SHORTCUTS = [
   { to: '/questions', title: 'Question Bank', text: 'Add, search and edit your questions.', icon: 'questions', roles: [ROLES.FACULTY] },
   { to: '/quizzes', title: 'Quizzes', text: 'Create, publish and take timed quizzes.', icon: 'quizzes', roles: [ROLES.FACULTY, ROLES.STUDENT] },
   { to: '/materials', title: 'Study Materials', text: 'Upload and share notes and slides.', icon: 'materials', roles: [ROLES.FACULTY, ROLES.STUDENT] },
-  { to: '/performance', title: 'Performance', text: 'See scores and topic-wise progress.', icon: 'performance', roles: [ROLES.FACULTY, ROLES.STUDENT] },
+  { to: '/faculty/performance', title: 'Class Performance', text: 'Review quiz and class performance.', icon: 'performance', roles: [ROLES.FACULTY] },
+  { to: '/performance', title: 'Performance', text: 'See scores and topic-wise progress.', icon: 'performance', roles: [ROLES.STUDENT] },
   { to: '/groups', title: 'Study Groups', text: 'Learn together with classmates.', icon: 'groups', roles: [ROLES.FACULTY, ROLES.STUDENT, ROLES.ADMIN] },
 ];
 
