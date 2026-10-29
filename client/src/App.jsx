@@ -16,6 +16,7 @@ import QuizAttemptPage from './pages/QuizAttemptPage';
 import QuizFormPage from './pages/QuizFormPage';
 import QuizSubmissionsPage from './pages/QuizSubmissionsPage';
 import PerformancePage from './pages/PerformancePage';
+import FacultyPerformancePage from './pages/FacultyPerformancePage';
 
 export default function App() {
   return (
@@ -69,6 +70,7 @@ export default function App() {
 
           {/* Faculty only */}
           <Route element={<ProtectedRoute roles={[ROLES.FACULTY]} />}>
+            <Route path="/faculty/performance" element={<FacultyPerformancePage />} />
             <Route path="/questions" element={<QuestionBankPage />} />
             <Route
               path="/questions/new"

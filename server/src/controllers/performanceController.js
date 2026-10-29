@@ -1,7 +1,7 @@
-
 const {
   getMyPerformance,
   getMyTopicPerformance,
+  getFacultyDashboard: getFacultyDashboardData,
 } = require('../services/performanceService');
 
 async function getMine(req, res, next) {
@@ -22,7 +22,17 @@ async function getTopics(req, res, next) {
   }
 }
 
+async function getFacultyDashboard(req, res, next) {
+  try {
+    const performance = await getFacultyDashboardData(req.user.id);
+    return res.status(200).json(performance);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   getMine,
   getTopics,
+  getFacultyDashboard,
 };
