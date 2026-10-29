@@ -1,4 +1,3 @@
-
 const request = require('supertest');
 const { performance } = require('node:perf_hooks');
 const app = require('../src/app');
@@ -13,6 +12,7 @@ const { tokenFor } = require('./helpers/auth');
 const STUDENT_COUNT = 100;
 const QUESTION_COUNT = 50;
 const MAX_SUBMISSION_MS = 2000;
+const MAX_QUESTION_LOAD_MS = 3000;
 const MAX_LAUNCH_WINDOW_MS = 5000;
 const HOUR = 60 * 60 * 1000;
 
@@ -99,119 +99,171 @@ afterEach(clearDB);
 afterAll(stopDB);
 
 describe('Issue #21: quiz grading performance', () => {
-  test('grades 100 submissions for a 50-question quiz and verifies persisted scores', async () => {
-    // Prepare attempts before the measured submission workload.
-    const startedAttempts = await Promise.all(
-      students.map(async (student) => {
-        const response = await request(app)
-          .post(`/api/quizzes/${quiz.id}/attempts`)
-          .set('Authorization', `Bearer ${student.token}`);
+  test(
+    'grades 100 submissions for a 50-question quiz and verifies persisted scores',
+    async () => {
+      // Start attempts and measure the response containing quiz questions.
+      const startedAttempts = await Promise.all(
+        students.map(async (student) => {
+          const requestStartedAt = performance.now();
 
-        expect(response.status).toBe(201);
-        return { student, attempt: response.body.attempt };
-      })
-    );
+          const response = await request(app)
+            .post(`/api/quizzes/${quiz.id}/attempts`)
+            .set('Authorization', `Bearer ${student.token}`);
 
-    expect(startedAttempts).toHaveLength(STUDENT_COUNT);
+          const elapsedMs = performance.now() - requestStartedAt;
 
-    // Answer all 50 questions correctly through the real answer endpoint.
-    // This setup is deliberately outside the submission timing measurement.
-    const answerSetup = await Promise.all(
-      startedAttempts.map(async ({ student, attempt }) => {
-        const answers = await Promise.all(
-          Array.from({ length: QUESTION_COUNT }, (_, index) =>
-            request(app)
-              .patch(`/api/quizzes/attempts/${attempt.id}/answers`)
-              .set('Authorization', `Bearer ${student.token}`)
-              .send({
-                questionId: index + 1,
-                selectedOption: 'C',
-              })
-          )
-        );
+          expect(response.status).toBe(201);
+          expect(response.body.attempt.questions).toHaveLength(
+            QUESTION_COUNT
+          );
 
-        expect(answers.every((response) => response.status === 200)).toBe(true);
-        return attempt.id;
-      })
-    );
+          return {
+            student,
+            attempt: response.body.attempt,
+            questionLoadMs: elapsedMs,
+          };
+        })
+      );
 
-    expect(answerSetup).toHaveLength(STUDENT_COUNT);
+      expect(startedAttempts).toHaveLength(STUDENT_COUNT);
 
-    // Launch the 100 actual HTTP submission requests concurrently.
-    const launchTimes = [];
+      const maxQuestionLoadMs = Math.max(
+        ...startedAttempts.map(({ questionLoadMs }) => questionLoadMs)
+      );
 
-    const submissions = await Promise.all(
-      startedAttempts.map(async ({ student, attempt }) => {
-        const requestStartedAt = performance.now();
-        launchTimes.push(requestStartedAt);
+      const slowQuestionLoads = startedAttempts.filter(
+        ({ questionLoadMs }) => questionLoadMs >= MAX_QUESTION_LOAD_MS
+      );
 
-        const response = await request(app)
-          .post(`/api/quizzes/attempts/${attempt.id}/submit`)
-          .set('Authorization', `Bearer ${student.token}`);
+      console.log(
+        `[Issue 21] Question-load max response: ${maxQuestionLoadMs.toFixed(2)} ms`
+      );
 
-        const elapsedMs = performance.now() - requestStartedAt;
+      expect(slowQuestionLoads).toHaveLength(0);
+      expect(maxQuestionLoadMs).toBeLessThan(MAX_QUESTION_LOAD_MS);
 
-        return { attemptId: attempt.id, response, elapsedMs };
-      })
-    );
+      // Submit all 50 answers per student.
+      // Answer preparation is outside the grading measurement.
+      const answerSetup = await Promise.all(
+        startedAttempts.map(async ({ student, attempt }) => {
+          const answers = await Promise.all(
+            Array.from({ length: QUESTION_COUNT }, (_, index) =>
+              request(app)
+                .patch(`/api/quizzes/attempts/${attempt.id}/answers`)
+                .set('Authorization', `Bearer ${student.token}`)
+                .send({
+                  questionId: index + 1,
+                  selectedOption: 'C',
+                })
+            )
+          );
 
-    const launchWindowMs = Math.max(...launchTimes) - Math.min(...launchTimes);
-    const submissionBatchMs = Math.max(...submissions.map(({ elapsedMs }) => elapsedMs));
+          expect(answers.every((response) => response.status === 200)).toBe(
+            true
+          );
 
-    expect(submissions).toHaveLength(STUDENT_COUNT);
-    expect(launchWindowMs).toBeLessThan(MAX_LAUNCH_WINDOW_MS);
+          return attempt.id;
+        })
+      );
 
-    const failedResponses = submissions.filter(
-      ({ response }) => response.status !== 200
-    );
+      expect(answerSetup).toHaveLength(STUDENT_COUNT);
 
-    expect(failedResponses.map(({ response }) => response.status)).toEqual([]);
+      // Launch all 100 submission requests concurrently.
+      const launchTimes = [];
 
-    const slowSubmissions = submissions.filter(
-      ({ elapsedMs }) => elapsedMs >= MAX_SUBMISSION_MS
-    );
+      const submissions = await Promise.all(
+        startedAttempts.map(async ({ student, attempt }) => {
+          const requestStartedAt = performance.now();
+          launchTimes.push(requestStartedAt);
 
-    // Include measurements in the Jest assertion output if the target is missed.
-    expect({
-      launchWindowMs: Number(launchWindowMs.toFixed(2)),
-      maxSubmissionMs: Number(submissionBatchMs.toFixed(2)),
-      slowSubmissionCount: slowSubmissions.length,
-    }).toEqual({
-      launchWindowMs: expect.any(Number),
-      maxSubmissionMs: expect.any(Number),
-      slowSubmissionCount: 0,
-    });
+          const response = await request(app)
+            .post(`/api/quizzes/attempts/${attempt.id}/submit`)
+            .set('Authorization', `Bearer ${student.token}`);
 
-    expect(launchWindowMs).toBeLessThan(MAX_LAUNCH_WINDOW_MS);
+          const elapsedMs = performance.now() - requestStartedAt;
 
-    for (const { response } of submissions) {
-      expect(response.body.attempt.status).toBe('Completed');
-      expect(response.body.attempt.score).toBe(QUESTION_COUNT);
-      expect(response.body.attempt.totalQuestions).toBe(QUESTION_COUNT);
-      expect(response.body.attempt.percentage).toBe(100);
-    }
+          return {
+            attemptId: attempt.id,
+            response,
+            elapsedMs,
+          };
+        })
+      );
 
-    const persistedAttempts = await Attempt.find({
-      _id: { $in: startedAttempts.map(({ attempt }) => attempt.id) },
-    }).lean();
+      const launchWindowMs =
+        Math.max(...launchTimes) - Math.min(...launchTimes);
 
-    expect(persistedAttempts).toHaveLength(STUDENT_COUNT);
+      const submissionBatchMs = Math.max(
+        ...submissions.map(({ elapsedMs }) => elapsedMs)
+      );
 
-    for (const attempt of persistedAttempts) {
-      expect(attempt.status).toBe('Completed');
-      expect(attempt.score).toBe(QUESTION_COUNT);
-      expect(attempt.totalQuestions).toBe(QUESTION_COUNT);
-      expect(attempt.percentage).toBe(100);
-      expect(attempt.submittedAt).toBeTruthy();
-    }
+      const slowSubmissions = submissions.filter(
+        ({ elapsedMs }) => elapsedMs >= MAX_SUBMISSION_MS
+      );
 
-    // Confirm all 100 attempts belong to distinct students.
-    expect(
-      new Set(persistedAttempts.map((attempt) => attempt.student.toString())).size
-    ).toBe(STUDENT_COUNT);
+      console.log(
+        `[Issue 21] Submission max response: ${submissionBatchMs.toFixed(2)} ms`
+      );
 
-    // Sanity-check that the quiz fixture has the expected workload.
-    const persistedQuiz = await Quiz.findById(quiz._id).lean();
-    expect(persistedQuiz.questions).toHaveLength(QUESTION_COUNT);
-  }, 120000);
+      console.log(
+        `[Issue 21] Submission launch window: ${launchWindowMs.toFixed(2)} ms`
+      );
+
+      console.log(
+        `[Issue 21] Submissions at/over ${MAX_SUBMISSION_MS} ms: ${slowSubmissions.length}`
+      );
+
+      expect(submissions).toHaveLength(STUDENT_COUNT);
+      expect(launchWindowMs).toBeLessThan(MAX_LAUNCH_WINDOW_MS);
+      expect(submissionBatchMs).toBeLessThan(MAX_SUBMISSION_MS);
+      expect(slowSubmissions).toHaveLength(0);
+
+      const failedResponses = submissions.filter(
+        ({ response }) => response.status !== 200
+      );
+
+      expect(
+        failedResponses.map(({ response }) => response.status)
+      ).toEqual([]);
+
+      // Verify every response reports the correct completed score.
+      for (const { response } of submissions) {
+        expect(response.body.attempt.status).toBe('Completed');
+        expect(response.body.attempt.score).toBe(QUESTION_COUNT);
+        expect(response.body.attempt.totalQuestions).toBe(QUESTION_COUNT);
+        expect(response.body.attempt.percentage).toBe(100);
+      }
+
+      // Verify results were persisted correctly in the database.
+      const persistedAttempts = await Attempt.find({
+        _id: {
+          $in: startedAttempts.map(({ attempt }) => attempt.id),
+        },
+      }).lean();
+
+      expect(persistedAttempts).toHaveLength(STUDENT_COUNT);
+
+      for (const attempt of persistedAttempts) {
+        expect(attempt.status).toBe('Completed');
+        expect(attempt.score).toBe(QUESTION_COUNT);
+        expect(attempt.totalQuestions).toBe(QUESTION_COUNT);
+        expect(attempt.percentage).toBe(100);
+        expect(attempt.submittedAt).toBeTruthy();
+      }
+
+      // Verify the 100 attempts belong to 100 distinct students.
+      const distinctStudents = new Set(
+        persistedAttempts.map((attempt) => attempt.student.toString())
+      );
+
+      expect(distinctStudents.size).toBe(STUDENT_COUNT);
+
+      // Confirm the quiz contains all 50 questions.
+      const persistedQuiz = await Quiz.findById(quiz._id).lean();
+
+      expect(persistedQuiz.questions).toHaveLength(QUESTION_COUNT);
+    },
+    120000
+  );
 });
