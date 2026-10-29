@@ -94,6 +94,16 @@ describe('Material upload and validation', () => {
     const saved = await Material.findById(res.body.id);
     expect(saved).not.toBeNull();
     expect(await fs.readFile(saved.storagePath)).toEqual(pngBuffer);
+
+    const downloaded = await request(app)
+      .get(`${URL}/${res.body.id}/download`)
+      .set('Authorization', `Bearer ${student.token}`);
+
+    expect(downloaded.status).toBe(200);
+    expect(Buffer.from(downloaded.body)).toEqual(pngBuffer);
+    expect(
+      crypto.createHash('sha256').update(downloaded.body).digest('hex')
+    ).toBe(res.body.checksum);
   });
 
   test('rejects a corrupted DOCX archive', async () => {
@@ -126,6 +136,28 @@ describe('Material upload and validation', () => {
     } finally {
       spy.mockRestore();
     }
+  });
+
+  test('cleans a partial file when storage writing fails and does not report success', async () => {
+    const writeFile = fs.writeFile.bind(fs);
+    const writeSpy = jest.spyOn(fs, 'writeFile').mockImplementationOnce(
+      async (filePath, contents, options) => {
+        await writeFile(filePath, contents.subarray(0, 4), options);
+        throw new Error('simulated interrupted storage write');
+      }
+    );
+
+    let res;
+    try {
+      res = await post();
+    } finally {
+      writeSpy.mockRestore();
+    }
+
+    expect(res.status).toBe(500);
+    expect(res.body).not.toHaveProperty('id');
+    expect(await Material.countDocuments()).toBe(0);
+    expect(await fs.readdir(STORAGE_DIR).catch(() => [])).toHaveLength(0);
   });
 
   test('rejects unauthenticated uploads', async () => {

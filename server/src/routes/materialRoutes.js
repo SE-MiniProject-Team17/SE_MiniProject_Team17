@@ -12,7 +12,7 @@ router.use(authenticate);
 router.post('/', uploadMaterial, controller.upload);
 router.get('/mine', controller.getMine);
 router.get('/shared', controller.getShared);
-router.patch('/:id', controller.update);
+router.patch('/:id', uploadMaterial, controller.update);
 router.delete('/:id', controller.remove);
 
 // Issue #12: View and download materials

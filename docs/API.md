@@ -80,3 +80,11 @@ The question-creation tests cover valid creation, missing fields, field-length b
 Run the server test suite from the `server` directory:
 
     npm test
+
+## 5. Material update and file replacement
+
+### `PATCH /api/materials/:id`
+
+Updates material metadata for its owner. The request may use `application/json` for metadata-only updates or `multipart/form-data` to replace the file using the `file` field. Replacement files follow the same PDF, DOCX, PPTX, PNG type/content validation and 25 MiB limit as material uploads. Metadata and the replacement file are validated before the record is saved. The response includes the resulting file name, type, size and SHA-256 checksum; the storage path is never returned.
+
+A failed replacement persistence returns an error and retains the prior record and stored file. After a successful record update, removal of the superseded file is cleanup; a cleanup error does not turn the committed replacement into a failure response.
