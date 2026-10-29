@@ -1,19 +1,14 @@
 
 name: CI
 
-# Run on pull requests targeting main or feature branches,
-# and on pushes to main or feature branches.
 on:
   pull_request:
-    branches:
-      - main
-      - "feat/**"
-      - "feature/**"
+    branches: [main]
   push:
     branches:
       - main
-      - "feat/**"
       - "feature/**"
+      - "feat/**"
 
 jobs:
   server:
