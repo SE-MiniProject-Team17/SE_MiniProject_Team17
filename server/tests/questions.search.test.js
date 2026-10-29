@@ -5,6 +5,7 @@
  */
 const mongoose = require('mongoose');
 const request = require('supertest');
+const { performance } = require('node:perf_hooks');
 const app = require('../src/app');
 const { Question } = require('../src/models/Question');
 const User = require('../src/models/User');
@@ -184,7 +185,7 @@ describe('TC-QB-08 – Students and logged-out users cannot see the question ban
 });
 
 describe('TC-QP-02 / NFR-PERF-05 – 1,000 questions', () => {
-  test('search and filters return within 2 seconds', async () => {
+  test('10 repeated searches and filters return within 2 seconds', async () => {
     const docs = [];
     for (let i = 0; i < 1000; i += 1) {
       docs.push(
@@ -199,12 +200,45 @@ describe('TC-QP-02 / NFR-PERF-05 – 1,000 questions', () => {
     await seed(docs);
     await Question.syncIndexes();
 
-    const start = Date.now();
-    const res = await get({ q: 'photosynthesis', topic: 'Biology', difficulty: 'Easy' });
-    const elapsed = Date.now() - start;
+    const latenciesMs = [];
+    let failedResponses = 0;
+    let matchingResults = 0;
+    for (let run = 0; run < 10; run += 1) {
+      const start = performance.now();
+      const res = await get({ q: 'photosynthesis', topic: 'Biology', difficulty: 'Easy' });
+      latenciesMs.push(performance.now() - start);
 
-    expect(res.status).toBe(200);
-    expect(res.body.total).toBeGreaterThan(0);
-    expect(elapsed).toBeLessThan(2000);
+      if (res.status !== 200) failedResponses += 1;
+      if (res.status === 200 && res.body.total > 0) matchingResults += 1;
+    }
+
+    const sorted = [...latenciesMs].sort((a, b) => a - b);
+    const p95Ms = sorted[Math.ceil(sorted.length * 0.95) - 1];
+    const measurement = {
+      testCase: 'TC-QP-02',
+      requirement: 'NFR-PERF-05',
+      environment: {
+        runtime: process.version,
+        platform: process.platform,
+        database: 'mongodb-memory-server',
+        client: 'Supertest in the Jest process',
+      },
+      datasetQuestions: 1000,
+      repetitions: latenciesMs.length,
+      successfulResponses: latenciesMs.length - failedResponses,
+      failedResponses,
+      failureRatePercent: Number((failedResponses / latenciesMs.length * 100).toFixed(2)),
+      repetitionsWithMatchingResults: matchingResults,
+      latencyMs: {
+        min: Number(sorted[0].toFixed(2)),
+        p95: Number(p95Ms.toFixed(2)),
+        max: Number(sorted[sorted.length - 1].toFixed(2)),
+      },
+    };
+    console.log(`[TC-QP-02 local measurement] ${JSON.stringify(measurement)}`);
+
+    expect(failedResponses).toBe(0);
+    expect(matchingResults).toBe(latenciesMs.length);
+    expect(latenciesMs.every((elapsed) => elapsed < 2000)).toBe(true);
   });
 });

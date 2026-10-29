@@ -20,6 +20,19 @@ let faculty;
 let quiz;
 let students;
 
+function summarizeLatencies(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const percentile = (fraction) =>
+    sorted[Math.max(0, Math.ceil(sorted.length * fraction) - 1)];
+
+  return {
+    minMs: Number(sorted[0].toFixed(2)),
+    p50Ms: Number(percentile(0.5).toFixed(2)),
+    p95Ms: Number(percentile(0.95).toFixed(2)),
+    maxMs: Number(sorted[sorted.length - 1].toFixed(2)),
+  };
+}
+
 beforeAll(async () => {
   await startDB();
   await QuizAttemptClaim.init();
@@ -113,33 +126,48 @@ describe('Issue #21: quiz grading performance', () => {
 
           const elapsedMs = performance.now() - requestStartedAt;
 
-          expect(response.status).toBe(201);
-          expect(response.body.attempt.questions).toHaveLength(
-            QUESTION_COUNT
-          );
-
           return {
             student,
-            attempt: response.body.attempt,
+            response,
+            attempt: response.body?.attempt,
             questionLoadMs: elapsedMs,
           };
         })
       );
 
-      expect(startedAttempts).toHaveLength(STUDENT_COUNT);
-
       const maxQuestionLoadMs = Math.max(
         ...startedAttempts.map(({ questionLoadMs }) => questionLoadMs)
+      );
+      const failedStarts = startedAttempts.filter(
+        ({ response, attempt }) =>
+          response.status !== 201 ||
+          !Array.isArray(attempt?.questions) ||
+          attempt.questions.length !== QUESTION_COUNT
       );
 
       const slowQuestionLoads = startedAttempts.filter(
         ({ questionLoadMs }) => questionLoadMs >= MAX_QUESTION_LOAD_MS
       );
 
-      console.log(
-        `[Issue 21] Question-load max response: ${maxQuestionLoadMs.toFixed(2)} ms`
-      );
+      console.log(`[TC-QP-03 local measurement] ${JSON.stringify({
+        environment: {
+          runtime: process.version,
+          platform: process.platform,
+          database: 'mongodb-memory-server',
+          client: 'Supertest in one Jest process',
+        },
+        concurrency: STUDENT_COUNT,
+        questionsPerQuiz: QUESTION_COUNT,
+        successfulResponses: startedAttempts.length - failedStarts.length,
+        failedResponses: failedStarts.length,
+        failureRatePercent: Number((failedStarts.length / startedAttempts.length * 100).toFixed(2)),
+        apiResponseLatency: summarizeLatencies(
+          startedAttempts.map(({ questionLoadMs }) => questionLoadMs)
+        ),
+      })}`);
 
+      expect(startedAttempts).toHaveLength(STUDENT_COUNT);
+      expect(failedStarts).toHaveLength(0);
       expect(slowQuestionLoads).toHaveLength(0);
       expect(maxQuestionLoadMs).toBeLessThan(MAX_QUESTION_LOAD_MS);
 
@@ -170,12 +198,12 @@ describe('Issue #21: quiz grading performance', () => {
       expect(answerSetup).toHaveLength(STUDENT_COUNT);
 
       // Launch all 100 submission requests concurrently.
-      const launchTimes = [];
+      const submissionStarts = [];
 
       const submissions = await Promise.all(
         startedAttempts.map(async ({ student, attempt }) => {
           const requestStartedAt = performance.now();
-          launchTimes.push(requestStartedAt);
+          submissionStarts.push(requestStartedAt);
 
           const response = await request(app)
             .post(`/api/quizzes/attempts/${attempt.id}/submit`)
@@ -187,31 +215,19 @@ describe('Issue #21: quiz grading performance', () => {
             attemptId: attempt.id,
             response,
             elapsedMs,
+            completedAt: performance.now(),
           };
         })
       );
 
-      const launchWindowMs =
-        Math.max(...launchTimes) - Math.min(...launchTimes);
-
-      const submissionBatchMs = Math.max(
-        ...submissions.map(({ elapsedMs }) => elapsedMs)
-      );
+      const launchWindowMs = Math.max(...submissionStarts) - Math.min(...submissionStarts);
+      const submissionBatchMs = Math.max(...submissions.map(({ elapsedMs }) => elapsedMs));
+      const submissionBatchElapsedMs =
+        Math.max(...submissions.map(({ completedAt }) => completedAt)) -
+        Math.min(...submissionStarts);
 
       const slowSubmissions = submissions.filter(
         ({ elapsedMs }) => elapsedMs >= MAX_SUBMISSION_MS
-      );
-
-      console.log(
-        `[Issue 21] Submission max response: ${submissionBatchMs.toFixed(2)} ms`
-      );
-
-      console.log(
-        `[Issue 21] Submission launch window: ${launchWindowMs.toFixed(2)} ms`
-      );
-
-      console.log(
-        `[Issue 21] Submissions at/over ${MAX_SUBMISSION_MS} ms: ${slowSubmissions.length}`
       );
 
       expect(submissions).toHaveLength(STUDENT_COUNT);
@@ -226,6 +242,25 @@ describe('Issue #21: quiz grading performance', () => {
       expect(
         failedResponses.map(({ response }) => response.status)
       ).toEqual([]);
+
+      console.log(`[TC-QP-01 local measurement] ${JSON.stringify({
+        environment: {
+          runtime: process.version,
+          platform: process.platform,
+          database: 'mongodb-memory-server',
+          client: 'Supertest in one Jest process',
+        },
+        concurrency: STUDENT_COUNT,
+        questionsPerQuiz: QUESTION_COUNT,
+        successfulResponses: submissions.length - failedResponses.length,
+        failedResponses: failedResponses.length,
+        failureRatePercent: Number((failedResponses.length / submissions.length * 100).toFixed(2)),
+        throughputRequestsPerSecond: Number((submissions.length / (submissionBatchElapsedMs / 1000)).toFixed(2)),
+        launchWindowMs: Number(launchWindowMs.toFixed(2)),
+        batchElapsedMs: Number(submissionBatchElapsedMs.toFixed(2)),
+        apiResponseLatency: summarizeLatencies(submissions.map(({ elapsedMs }) => elapsedMs)),
+        overTwoSecondResponses: slowSubmissions.length,
+      })}`);
 
       // Verify every response reports the correct completed score.
       for (const { response } of submissions) {
