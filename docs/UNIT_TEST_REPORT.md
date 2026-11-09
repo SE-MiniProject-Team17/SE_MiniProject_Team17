@@ -1,22 +1,27 @@
 # Unit Test Report
+
 ## SE Mini Project — Team 17
+
 **Project:** Collaborative Study Material & Quiz Platform  
 **Report date:** 7 November 2026  
+**Specification baseline:** SRS Revision 1.2; STP Revision 1.3  
 **Test framework:** Jest 29.7.0  
 **Backend runtime:** Node.js v22.19.0  
 **Package manager:** npm 11.10.0  
 **Test scope:** Backend automated test suite (`server/tests`)  
-**Execution environment:** Windows local development environment using the test helper's in-memory MongoDB and Supertest
+**Execution environment:** Windows local development environment using the test helper's in-memory MongoDB and Supertest.
 
 ---
 
 ## 1. Objective
 
-This report records the automated backend test execution for the Team 17 Collaborative Study Material & Quiz Platform. It summarizes the execution result, test scope, principal areas exercised, and limitations against the Software Test Plan (STP), Revision 1.2.
+This report records the automated backend test execution for the Team 17 Collaborative Study Material & Quiz Platform. It summarizes the execution result, test scope, principal areas exercised, and limitations against the Software Test Plan (STP), Revision 1.3.
 
 The Deliverables Part-3 specification requests a Unit Test Report. The repository's automated backend suite uses Jest and includes substantial API-level tests implemented with Supertest and an in-memory MongoDB. Accordingly, this report preserves the requested deliverable title while accurately describing the executed tests as a mixture of service/logic checks and API integration tests. It does not relabel API tests as isolated unit tests.
 
-## 2. Test environment and execution
+The report distinguishes successful automated test execution from verification of individual STP test cases. A passing automated test does not automatically establish that every related STP requirement or unit-test candidate has passed.
+
+## 2. Test Environment and Execution
 
 | Item | Recorded value |
 |---|---|
@@ -29,13 +34,19 @@ The Deliverables Part-3 specification requests a Unit Test Report. The repositor
 | Test data | Test fixtures/accounts created by the test suites |
 | Production database | Not used |
 | Test execution date | 7 November 2026 |
+| Specification baseline | STP Revision 1.3 |
 | Command | `npm --prefix server test -- --coverage --collectCoverageFrom="src/**/*.js"` |
 | Repository branch recorded with the reports | `docs/sprint-3-test-reports` |
-| Tested application commit SHA | Not independently recorded in the available execution summary; the documentation commit `f1b7de0` must not be treated as the tested application SHA without verification |
+| Documentation commit | `f1b7de0` |
+| Tested application commit SHA | Not independently recorded in the available execution summary |
 
 The command above ran the backend Jest suite with coverage collection enabled.
 
-## 3. Execution summary
+The execution used the local test environment and an in-memory database. It does not represent execution against the production database, production file storage or deployed infrastructure.
+
+The documentation commit `f1b7de0` identifies the report-related documentation revision. It must not be treated as the tested application commit SHA without independent verification.
+
+## 3. Execution Summary
 
 **Execution result: Passed**
 
@@ -50,9 +61,13 @@ The command above ran the backend Jest suite with coverage collection enabled.
 
 **Overall automated execution result:** 29 of 29 suites passed; 349 of 349 tests passed; no failed tests were reported.
 
-This result applies to the recorded local automated execution. It is not evidence that every test case in the STP, every manual acceptance scenario, or every deployment-dependent test was executed.
+This result applies to the recorded local automated execution.
 
-## 4. Test scope and coverage areas
+It is not evidence that every test case in STP Revision 1.3, every manual acceptance scenario or every deployment-dependent test was executed.
+
+The 349 tests represent the total number of automated Jest tests reported in the execution summary. They must not be interpreted as 349 independently verified STP test cases or as proof that all 28 STP unit-test candidates were executed.
+
+## 4. Test Scope and Coverage Areas
 
 The checked-in test inventory and the test files reviewed for this report show automated tests in the following areas:
 
@@ -70,45 +85,98 @@ The checked-in test inventory and the test files reviewed for this report show a
 | Study groups and collaboration | Group creation, joining, duplicate membership, membership listing and moderation |
 | Cross-module/security behaviour | Authentication requirements, role-based access, unavailable-resource responses and protected data |
 
-Representative test files include `auth.test.js`, `login.test.js`, `account.profile.test.js`, `session.test.js`, `materials.upload.test.js`, `materials.access-download.test.js`, `materials.edit-removal.test.js`, `materials.sharing.test.js`, `questions.create.test.js`, `questions.search.test.js`, `quizzes.test.js`, `quizzes.access.test.js`, `studentQuizAttempts.test.js`, `performance.test.js`, `groups.create.test.js`, `groups.join.test.js`, and `moderation.test.js`.
+Representative test files include:
 
-The repository inventory is a list of test declarations and test-file locations. It is useful for identifying test scope, but the inventory by itself is not execution evidence; the execution totals in Section 3 are taken from the recorded Jest run.
+- `auth.test.js`
+- `login.test.js`
+- `account.profile.test.js`
+- `session.test.js`
+- `materials.upload.test.js`
+- `materials.access-download.test.js`
+- `materials.edit-removal.test.js`
+- `materials.sharing.test.js`
+- `questions.create.test.js`
+- `questions.search.test.js`
+- `quizzes.test.js`
+- `quizzes.access.test.js`
+- `studentQuizAttempts.test.js`
+- `performance.test.js`
+- `groups.create.test.js`
+- `groups.join.test.js`
+- `moderation.test.js`
 
-## 5. Relationship to the STP unit-test candidates
+The repository inventory is a list of test declarations and test-file locations. It is useful for identifying test scope, but the inventory by itself is not execution evidence. The execution totals in Section 3 are taken from the recorded Jest run.
 
-STP Revision 1.2 identifies 28 unit-test candidates across Account, Collaboration, Material, Performance Analytics, and Quiz areas. The current implementation tests exercise many of the corresponding behaviours through API and service integration paths.
+## 5. Relationship to the STP Unit-Test Candidates
 
-However, the provisional helper/function names in the STP are not all implemented as standalone pure functions. In several areas, validation and business rules are embedded in controllers, middleware, services, or database-backed operations. Therefore:
+STP Revision 1.3 identifies 28 unit-test candidates across Account, Collaboration, Material, Performance Analytics and Quiz areas.
+
+The current implementation tests exercise many of the corresponding behaviours through API and service integration paths.
+
+However, the provisional helper/function names in the STP are not all implemented as standalone pure functions. In several areas, validation and business rules are embedded in controllers, middleware, services or database-backed operations.
+
+Therefore:
 
 - A matching API test is evidence that the exercised behaviour was tested at the API/integration level.
 - It must not automatically be described as an isolated unit test of the provisional function named in the STP.
 - The presence of a test ID or test file does not prove that every input boundary and branch in the candidate has been exercised.
-- The detailed requirement-to-test disposition remains governed by the STP traceability matrix and the separate System Validation Report.
+- A passing Jest test must be mapped to the corresponding STP candidate before it is used as evidence for that candidate.
+- A unit-test candidate should only be classified as Passed when its intended behaviour and expected result have been verified.
+- Candidates without sufficient individual execution evidence must retain their appropriate outstanding status.
 
-## 6. Test result interpretation
+The detailed requirement-to-test disposition remains governed by the STP Revision 1.3 traceability matrix and the separate System Validation Report.
 
-The automated suite provides positive evidence for the behaviours asserted by its 349 passing tests. In particular, it exercises authentication and authorization, material storage and integrity, question/quiz workflows, attempt handling, and collaboration endpoints.
+## 6. Test Result Interpretation
 
-A passing assertion establishes only the expected behaviour checked by that test under its test conditions. It does not establish:
+The automated suite provides positive evidence for the behaviours asserted by its 349 passing tests.
 
-- correctness for untested inputs or branches;
-- operation against the production database, production file store, or deployed infrastructure;
-- real browser rendering or cross-browser/mobile compatibility;
-- the usability outcome of tests requiring first-time human participants;
-- production TLS configuration, scheduled backup execution, or a completed restore;
-- production-scale performance or availability.
+In particular, it exercises authentication and authorization, material storage and integrity, question/quiz workflows, attempt handling and collaboration endpoints.
 
-## 7. Known limitations and follow-up
+A passing assertion establishes only the expected behaviour checked by that test under its test conditions.
 
-1. **Coverage is not complete.** The companion Code Coverage and Branch Coverage Reports record 88.41% statement coverage, 89.11% line coverage, 91.36% function coverage, and 76.86% branch coverage.
+It does not establish:
+
+- Correctness for untested inputs or branches.
+- Operation against the production database, production file store or deployed infrastructure.
+- Real browser rendering or cross-browser/mobile compatibility.
+- The usability outcome of tests requiring first-time human participants.
+- Production TLS configuration, scheduled backup execution or a completed restore.
+- Production-scale performance or availability.
+- Completion of every individual STP Revision 1.3 test case or unit-test candidate.
+
+Automated execution results must be considered together with the individual test-case evidence and the limitations documented in the System Validation Report.
+
+## 7. Known Limitations and Follow-Up
+
+1. **Coverage is not complete.** The companion Code Coverage and Branch Coverage Reports record 88.41% statement coverage, 89.11% line coverage, 91.36% function coverage and 76.86% branch coverage.
+
 2. **Startup/database configuration is outside this test setup.** The coverage report identifies `src/server.js` and `src/config/db.js` as unexecuted because tests import the Express app directly and use an in-memory database.
+
 3. **Unused group validator file.** `src/validators/groupValidators.js` is not connected to the group creation route; validation is performed in `groupService.createGroup()`.
-4. **Not all STP unit candidates are isolated unit tests.** Some corresponding behaviours are covered through API-level integration tests; the test-level distinction should be retained in traceability records.
-5. **Manual and deployment-dependent tests remain separate.** Refer to the System Validation Report for tests that require a deployed environment, browser/device matrix, participants, or operational infrastructure.
-6. **Build identity.** The application commit SHA used for the 7 November execution was not independently recorded in the available run summary. The report commit `f1b7de0` is a documentation commit and must not be substituted for the tested application SHA.
+
+4. **Not all STP unit candidates are isolated unit tests.** Some corresponding behaviours are covered through API-level integration tests. The test-level distinction should be retained in traceability records.
+
+5. **Individual candidate mapping remains necessary.** The aggregate Jest result does not establish that all 28 STP unit-test candidates have been individually verified. Each candidate must be associated with actual test evidence and its expected behaviour.
+
+6. **Manual and deployment-dependent tests remain separate.** Refer to the System Validation Report for tests that require a deployed environment, browser/device matrix, participants or operational infrastructure.
+
+7. **Build identity.** The application commit SHA used for the 7 November execution was not independently recorded in the available run summary. The report commit `f1b7de0` is a documentation commit and must not be substituted for the tested application SHA.
 
 ## 8. Conclusion
 
-The recorded backend automated test execution completed successfully: all 29 Jest suites and all 349 tests passed in 166.11 seconds. The suite provides broad automated coverage of the platform's principal backend workflows and access controls.
+The recorded backend automated test execution completed successfully: all 29 Jest suites and all 349 tests passed in 166.11 seconds.
 
-This result is an automated backend test result, primarily based on Jest/Supertest tests using an in-memory database. It is not, by itself, proof that all 28 STP unit-test candidates were independently executed as isolated unit tests or that all system-validation, acceptance, non-functional, and deployment-dependent requirements have passed. Those statuses are reported separately in `SYSTEM_VALIDATION_REPORT.md`.
+The suite provides broad automated coverage of the platform's principal backend workflows and access controls.
+
+This result is an automated backend test result, primarily based on Jest/Supertest tests using an in-memory database.
+
+It is not, by itself, proof that all 28 STP Revision 1.3 unit-test candidates were independently executed as isolated unit tests or that all system-validation, acceptance, non-functional and deployment-dependent requirements have passed.
+
+**Final disposition:**
+
+- **Automated backend test execution:** Passed.
+- **Test suites:** 29 of 29 passed.
+- **Individual automated tests:** 349 of 349 passed.
+- **STP unit-test candidate verification:** Not fully established by the aggregate execution result; individual mapping and evidence are required.
+- **Overall system validation:** Partially Verified, as documented in `SYSTEM_VALIDATION_REPORT.md`.
+
