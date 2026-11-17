@@ -51,8 +51,6 @@ npm test -- --cacheDirectory .jest-cache --runTestsByPath tests/materials.edit-r
 | Isolated restore from <=24h backup | Restored records and files match known source | No known backup/isolated restore target supplied; restore intentionally not attempted | Not Executed |
 | Real client interruption / process crash recovery | Prior state retained; no false success; recoverable artifacts | No controlled deployment, proxy/network interruption, crash-recovery harness, or approved environment | Not Executed |
 
-The repository's earlier report at `docs/ISSUE_11_31_32_VERIFICATION.md` predates this execution and is not the evidence source for the results above.
-
 ## Defects, dependencies, and next actions
 
 1. **Backup/restore dependency (NFR-SAFE-01):** provide an approved isolated non-production environment, backup owner and schedule, MongoDB and file-store backup configuration, retention policy, and a timestamped backup no more than 24 hours old. Then restore both stores and compare account/material records and file checksums.

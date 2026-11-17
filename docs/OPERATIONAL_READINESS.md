@@ -3,7 +3,7 @@
 **Verification date:** 2026-10-29 (Asia/Calcutta)  
 **Branch/base:** `docs/issue-38-operational-readiness`, based on refreshed `origin/main` at `c0e5b22`  
 **Issue state:** Open (queried from GitHub API on verification date); no open pull requests were listed.  
-**Scope:** Startup, shutdown, configuration, health checks, diagnostics, and operational dependencies. Backup/restore evidence belongs to [Issue #11 verification](ISSUE_11_31_32_VERIFICATION.md#issue-11--backup-restoration-and-material-integrity); it is not duplicated here.
+**Scope:** Startup, shutdown, configuration, health checks, diagnostics, and operational dependencies. Backup/restore evidence belongs to [Issue #11 verification](ISSUE_11_BACKUP_INTEGRITY.md); it is not duplicated here.
 
 ## Architecture and configuration inspected
 

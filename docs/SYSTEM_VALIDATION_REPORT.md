@@ -135,7 +135,7 @@ The existing issue-specific reports identify the following distinctions.
 | NFR-QUAL-04 compatibility | No complete executed desktop/mobile browser and device matrix with retained evidence identified | Not Executed |
 | NFR-QUAL-02 availability | No complete monthly production availability observation record identified | Not Demonstrated |
 | NFR-QUAL-05 modularity | Architecture/source organization can be inspected; this is not a runtime acceptance test | Inspection evidence only; confirm the STP's required review record |
-| NFR-QUAL-06 traceability | `ISSUE_29_TRACEABILITY_AUDIT.md` records structural traceability findings, including unresolved mappings and partial/blocked rows | Partially complete; the audit itself does not establish all requirements as verified |
+| NFR-QUAL-06 traceability | `REQUIREMENT_TRACEABILITY_MATRIX.xlsx` records requirement-to-test mappings, execution status, evidence, and open gaps | Partially complete; mapped tests and designed coverage do not establish all requirements as verified |
 
 For exact performance measurements, local-run conditions and limitations, refer to `ISSUE_32_PERFORMANCE.md`.
 
@@ -245,7 +245,7 @@ The following items remain outside the proof supplied by the 29-suite/349-test l
 
 7. **Application startup/readiness:** Validate startup, database connectivity, health/readiness and shutdown against an available isolated database/deployment.
 
-8. **Requirement traceability:** Resolve or explicitly retain the open/partial/blocked requirement mappings identified in `ISSUE_29_TRACEABILITY_AUDIT.md` and the STP open-decision register.
+8. **Requirement traceability:** Resolve or explicitly retain the open/partial/blocked mappings recorded in `REQUIREMENT_TRACEABILITY_MATRIX.xlsx` and the STP open-decision register.
 
 9. **Build identity:** Attach the exact application commit SHA used for the 7 November automated run. Do not substitute the documentation commit SHA.
 
@@ -286,7 +286,7 @@ The following repository artifacts support this report:
 - `docs/ISSUE_11_BACKUP_INTEGRITY.md` — backup, failure preservation and file integrity evidence.
 - `docs/ISSUE_31_QUALITY_COMPATIBILITY.md` — robustness, usability and browser/device compatibility evidence.
 - `docs/ISSUE_32_PERFORMANCE.md` — local performance measurements and deployment limitations.
-- `docs/ISSUE_29_TRACEABILITY_AUDIT.md` — requirement-to-test structural audit and outstanding traceability work.
+- `docs/REQUIREMENT_TRACEABILITY_MATRIX.xlsx` — requirement-to-test mappings, execution statuses, evidence, and outstanding traceability work.
 - `docs/OPERATIONAL_READINESS.md` — startup, database, health and operational readiness findings.
 - `docs/STP_Team17_Rev1_3.docx` — test strategy, test inventory, traceability, entry/exit criteria and open decisions.
 - `server/tests/` — automated test source files.

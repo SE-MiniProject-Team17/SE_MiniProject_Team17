@@ -17,7 +17,7 @@
 | **NFR-PERF-05:** question-bank search/filter within 2 seconds for up to 1,000 questions | TC-QP-02 | `server/tests/questions.search.test.js` seeds 1,000 questions and repeats combined query ten times | **Partially Verified:** local in-memory 10/10 succeeded with matching results; min 11.06 ms, p95/max 13.45 ms. Not deployment evidence. |
 | **NFR-PERF-06:** quiz questions display within 3 seconds after Student starts | TC-QP-03 | Issue #21 test measures the 50-question attempt-start API response for 100 local test users | **Partially Verified:** local API responses 100/100 succeeded; p50 1,641.03 ms, p95 1,714.01 ms, max 1,722.17 ms. Browser rendering/display remains unmeasured. |
 
-The mappings above were checked against the original STP Rev 1.2 Appendix A and traceability section. NFR-PERF-04 is coordinated with the existing #21 quiz test rather than duplicating its quiz fixture/answering/grading workflow. NFR-SAFE-01/02/03 and backup/restore procedures remain with Issue #11; see [Issue #11 verification](ISSUE_11_31_32_VERIFICATION.md#issue-11--backup-restoration-and-material-integrity). Operational startup dependencies are tracked in [Issue #38 operational readiness](OPERATIONAL_READINESS.md).
+The mappings above were checked against the original STP Rev 1.2 Appendix A and traceability section. NFR-PERF-04 is coordinated with the existing #21 quiz test rather than duplicating its quiz fixture/answering/grading workflow. NFR-SAFE-01/02/03 and backup/restore procedures remain with Issue #11; see [Issue #11 verification](ISSUE_11_BACKUP_INTEGRITY.md). Operational startup dependencies are tracked in [Issue #38 operational readiness](OPERATIONAL_READINESS.md).
 
 ## Existing implementation and instrumentation
 

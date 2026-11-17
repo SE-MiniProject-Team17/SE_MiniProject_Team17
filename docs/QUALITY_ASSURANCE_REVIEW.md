@@ -1,16 +1,16 @@
 
 
-\# Issue #30 — Availability, Modularity and Requirement Traceability Review
+# Issue #30 — Availability, Modularity and Requirement Traceability Review
 
 
 
-\*\*Review status:\*\* In progress — evidence and follow-up required  
+**Review status:** In progress — evidence and follow-up required
 
-\*\*Requirement baseline:\*\* SRS Revision 1.2 and STP Revision 1.2  
+**Requirement baseline:** SRS Revision 1.2 and STP Revision 1.2
 
-\*\*Related audit:\*\* \[Issue #29 Traceability Audit](ISSUE\_29\_TRACEABILITY\_AUDIT.md)  
+**Related audit:** [Requirement Traceability Matrix](REQUIREMENT_TRACEABILITY_MATRIX.xlsx)
 
-\*\*Related report:\*\* \[Security Verification Report](SECURITY\_VERIFICATION\_REPORT.md)
+**Related report:** [Security Verification Report](SECURITY_VERIFICATION_REPORT.md)
 
 
 

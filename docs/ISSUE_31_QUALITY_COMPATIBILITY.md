@@ -24,7 +24,7 @@ The TC-AN mappings were confirmed in STP Rev 1.2 Appendix A and the traceability
 - `server/tests/materials.access-download.test.js` covers unauthorized and unavailable access; checksum comparisons are in the upload/download tests.
 - This branch extends `server/tests/base.test.js` to send malformed JSON to registration, login and materials endpoints, assert a generic 400 validation response without echoing the request body, and then check the health route still responds in the same process.
 
-The successful local run is evidence for the exercised automated paths, not all of TC-AN-05. It does not emulate a real interrupted client connection or prove that a deployed process remains healthy with another active user's session. It also does not replace TC-AN-04 or TC-AN-06. Backup/restore and prior-state behavior for interrupted material operations remain under [Issue #11](ISSUE_11_31_32_VERIFICATION.md#issue-11--backup-restoration-and-material-integrity); deployment startup dependencies are in [Issue #38](OPERATIONAL_READINESS.md).
+The successful local run is evidence for the exercised automated paths, not all of TC-AN-05. It does not emulate a real interrupted client connection or prove that a deployed process remains healthy with another active user's session. It also does not replace TC-AN-04 or TC-AN-06. Backup/restore and prior-state behavior for interrupted material operations are documented in [Issue #11](ISSUE_11_BACKUP_INTEGRITY.md); deployment startup dependencies are in [Issue #38](OPERATIONAL_READINESS.md).
 
 ## Environment and browser availability
 
